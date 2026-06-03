@@ -5,8 +5,10 @@ import { useState } from "react";
 interface Props {
     user: {
         id: number;
-        name: string;
+        first_name: string;
+        last_name: string;
         email: string;
+        bio: any;
         avatar?: string | null;
         role?: string | null;
         created_at?: string;
@@ -15,9 +17,11 @@ interface Props {
 
 export default function Index({ user }: Props) {
     const profileForm = useForm({
-        name: user.name || "",
+        first_name: user.first_name || "",
+        last_name: user.last_name || "",
         email: user.email || "",
         avatar: null as File | null,
+        bio: user.bio || "",
     });
 
     const passwordForm = useForm({
@@ -68,7 +72,7 @@ export default function Index({ user }: Props) {
                         <div className="text-center d-flex flex-column align-items-center">
                             <img
                                 src={avatar}
-                                alt={user.name}
+                                alt={user.first_name}
                                 className="rounded-circle mb-3 border border-1"
                                 style={{
                                     width: "120px",
@@ -77,7 +81,7 @@ export default function Index({ user }: Props) {
                                 }}
                             />
 
-                            <h3 className="mb-1">{user.name}</h3>
+                            <h3 className="mb-1">{user.first_name} {user.last_name}</h3>
 
                             <p className="text-muted mb-3">{user.email}</p>
 
@@ -132,7 +136,7 @@ export default function Index({ user }: Props) {
                                 <div className="col-lg-6">
                                     <div className="mb-20">
                                         <label className="label fs-16 mb-2">
-                                            Full Name
+                                            First Name
                                         </label>
 
                                         <div className="form-floating">
@@ -140,21 +144,51 @@ export default function Index({ user }: Props) {
                                                 type="text"
                                                 className="form-control"
                                                 placeholder="Full name"
-                                                value={profileForm.data.name}
+                                                value={profileForm.data.first_name}
                                                 onChange={(e) =>
                                                     profileForm.setData(
-                                                        "name",
+                                                        "first_name",
                                                         e.target.value
                                                     )
                                                 }
                                             />
 
-                                            <label>Full name</label>
+                                            <label>First name</label>
                                         </div>
 
-                                        {profileForm.errors.name && (
+                                        {profileForm.errors.first_name && (
                                             <div className="text-danger mt-1">
-                                                {profileForm.errors.name}
+                                                {profileForm.errors.first_name}
+                                            </div>
+                                        )}
+                                    </div>
+                                </div>
+                                <div className="col-lg-6">
+                                    <div className="mb-20">
+                                        <label className="label fs-16 mb-2">
+                                            Last Name
+                                        </label>
+
+                                        <div className="form-floating">
+                                            <input
+                                                type="text"
+                                                className="form-control"
+                                                placeholder="Last name"
+                                                value={profileForm.data.last_name}
+                                                onChange={(e) =>
+                                                    profileForm.setData(
+                                                        "last_name",
+                                                        e.target.value
+                                                    )
+                                                }
+                                            />
+
+                                            <label>First name</label>
+                                        </div>
+
+                                        {profileForm.errors.last_name && (
+                                            <div className="text-danger mt-1">
+                                                {profileForm.errors.last_name}
                                             </div>
                                         )}
                                     </div>
@@ -186,6 +220,31 @@ export default function Index({ user }: Props) {
                                         {profileForm.errors.email && (
                                             <div className="text-danger mt-1">
                                                 {profileForm.errors.email}
+                                            </div>
+                                        )}
+                                    </div>
+                                </div>
+                                <div className="col-lg-12">
+                                    <div className="mb-20">
+                                        <label className="label fs-16 mb-2">
+                                            Bio
+                                        </label>
+
+                                        <div className="form-floating">
+                                            <textarea
+                                                onChange={(e) =>
+                                                    profileForm.setData(
+                                                        "bio",
+                                                        e.target.value
+                                                    )
+                                                } className="form-control">{profileForm.data.bio}</textarea>
+
+                                            <label>bio </label>
+                                        </div>
+
+                                        {profileForm.errors.bio && (
+                                            <div className="text-danger mt-1">
+                                                {profileForm.errors.bio}
                                             </div>
                                         )}
                                     </div>
@@ -274,13 +333,13 @@ export default function Index({ user }: Props) {
 
                                         {passwordForm.errors
                                             .current_password && (
-                                            <div className="text-danger mt-1">
-                                                {
-                                                    passwordForm.errors
-                                                        .current_password
-                                                }
-                                            </div>
-                                        )}
+                                                <div className="text-danger mt-1">
+                                                    {
+                                                        passwordForm.errors
+                                                            .current_password
+                                                    }
+                                                </div>
+                                            )}
                                     </div>
                                 </div>
 
@@ -385,13 +444,13 @@ export default function Index({ user }: Props) {
 
                                         {passwordForm.errors
                                             .password_confirmation && (
-                                            <div className="text-danger mt-1">
-                                                {
-                                                    passwordForm.errors
-                                                        .password_confirmation
-                                                }
-                                            </div>
-                                        )}
+                                                <div className="text-danger mt-1">
+                                                    {
+                                                        passwordForm.errors
+                                                            .password_confirmation
+                                                    }
+                                                </div>
+                                            )}
                                     </div>
                                 </div>
 
