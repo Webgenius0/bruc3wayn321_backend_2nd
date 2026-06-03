@@ -15,4 +15,38 @@ class AuthRepository
     {
         return User::where('email', $email)->first();
     }
+
+    public function update(User $user, array $data): User
+    {
+        $user->update($data);
+
+        return $user->fresh();
+    }
+
+    public function delete(User $user): bool
+    {
+        return $user->delete();
+    }
+
+    public function uploadAvatar(array $data): array
+    {
+        if (
+            isset($data['avatar']) &&
+            $data['avatar']
+        ) {
+            $file = $data['avatar'];
+
+            $fileName = time() . '.' . $file->getClientOriginalExtension();
+
+            $path = $file->storeAs(
+                'uploads/avatar',
+                $fileName,
+                'public'
+            );
+
+            $data['avatar'] = 'storage/' . $path;
+        }
+
+        return $data;
+    }
 }

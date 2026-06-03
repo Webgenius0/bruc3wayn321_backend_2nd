@@ -17,7 +17,8 @@ class UserSeeder extends Seeder
         User::updateOrCreate(
             ['email' => 'superadmin@gmail.com'],
             [
-                'name' => 'Super Admin',
+                'first_name' => 'Super',
+                'last_name' => 'Admin',
                 'password' => Hash::make('12345678'),
                 'role' => 'super_admin',
                 'email_verified_at' => now(),
@@ -27,7 +28,8 @@ class UserSeeder extends Seeder
         User::updateOrCreate(
             ['email' => 'admin@gmail.com'],
             [
-                'name' => 'Admin',
+                'first_name' => 'Mr.',
+                'last_name' => 'Admin',
                 'password' => Hash::make('12345678'),
                 'role' => 'admin',
                 'email_verified_at' => now(),
@@ -37,9 +39,10 @@ class UserSeeder extends Seeder
         User::updateOrCreate(
             ['email' => 'user@gmail.com'],
             [
-                'name' => 'User',
-                'password' => Hash::make('12345678'),
-                'role' => 'user',
+                'first_name'        => 'Mr.',
+                'last_name'         => 'User',
+                'password'          => Hash::make('12345678'),
+                'role'              => 'user',
                 'email_verified_at' => now(),
             ]
         );

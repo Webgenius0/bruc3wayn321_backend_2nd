@@ -13,6 +13,8 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Password;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
 
 class AuthService
@@ -26,33 +28,38 @@ class AuthService
     public function register(array $data)
     {
         $data['password'] = Hash::make($data['password']);
-
         $exists = $this->repository->findByEmail($data['email']);
 
         if ($exists) {
             if ($exists->email_verified_at != null) {
-                // return $this->errorResponse('Email already verified', 409);
                 throw new \Exception('Email already verified');
             }
-
             $otp = (new Otp)->generate($data['email'], 'numeric', 6, 15);
-
             Mail::to($data['email'])->send(new VerifyRegister($exists, $otp->token));
-
             return [
                 'token' => $otp->token,
                 'user' => $exists,
             ];
         }
 
+
+        if (!empty($data['avatar'])) {
+            $data = $this->repository->uploadAvatar($data);
+        }
+
+        do {
+            $userName = Str::slug(
+                $data['first_name'] . $data['last_name'],
+                ''
+            ) . rand(1000, 9999);
+        } while (User::where('user_name', $userName)->exists());
+
+        $data['user_name'] = $userName;
+
+        // dd($data);
+
         $user = $this->repository->createUser($data);
-
-
         $otp = (new Otp)->generate($data['email'], 'numeric', 6, 15);
-
-
-        // $token = $user->createToken('api-token')->plainTextToken;
-
         return [
             'token' => $otp->token,
             'user' => $user,
@@ -96,6 +103,10 @@ class AuthService
         $auth = Auth::user();
 
         $user = User::find($auth->id);
+
+        if ($user->email_verified_at == null) {
+            throw new \Exception('User email not Verified');
+        }
 
         $token = $user->createToken('api-token')->plainTextToken;
 
@@ -153,6 +164,65 @@ class AuthService
                 $user->password = Hash::make($password);
                 $user->save();
             }
+        );
+    }
+
+    public function update(User $user, array $data)
+    {
+        if (!empty($data['avatar'])) {
+
+            $oldAvatar = $user->getRawOriginal('avatar');
+
+            if (
+                $oldAvatar &&
+                Storage::disk('public')->exists(
+                    str_replace('storage/', '', $oldAvatar)
+                )
+            ) {
+                Storage::disk('public')->delete(
+                    str_replace('storage/', '', $oldAvatar)
+                );
+            }
+
+            $data = $this->repository->uploadAvatar($data);
+        } else {
+            unset($data['avatar']);
+        }
+
+        if (
+            isset($data['email']) &&
+            $user->email !== $data['email']
+        ) {
+            $data['email_verified_at'] = null;
+        }
+
+        $user = $this->repository->update($user, $data);
+
+        return $this->successResponse(
+            'Profile updated successfully',
+            $user
+        );
+    }
+
+    public function delete(User $user)
+    {
+        $avatar = $user->getRawOriginal('avatar');
+
+        if (
+            $avatar &&
+            Storage::disk('public')->exists(
+                str_replace('storage/', '', $avatar)
+            )
+        ) {
+            Storage::disk('public')->delete(
+                str_replace('storage/', '', $avatar)
+            );
+        }
+
+        $this->repository->delete($user);
+
+        return $this->successResponse(
+            'Account deleted successfully'
         );
     }
 }

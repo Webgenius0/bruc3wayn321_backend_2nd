@@ -23,12 +23,18 @@ class User extends Authenticatable implements PasskeyUser
 
     protected $fillable = [
         'name',
+        "first_name",
+        "last_name",
+        "bio",
+        "user_name",
         'email',
         'password',
         'avatar',
         'role',
         'email_verified_at',
         'remember_token',
+        'phone',
+        'date_of_birth',
 
         "email_notifications",
         "push_notifications",

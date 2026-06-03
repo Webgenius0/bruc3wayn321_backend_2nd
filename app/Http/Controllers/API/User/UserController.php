@@ -5,6 +5,8 @@ namespace App\Http\Controllers\API\User;
 use App\Concerns\ApiResponse;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\UpdatePassword;
+use App\Http\Requests\UserUpdateRequest;
+use App\Services\Auth\AuthService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
@@ -15,6 +17,10 @@ use Illuminate\Validation\Rule;
 class UserController extends Controller
 {
     use ApiResponse;
+
+    public function __construct(
+        protected AuthService $service
+    ) {}
 
     private array $notificationFields = [
         'email_notifications',
@@ -32,66 +38,11 @@ class UserController extends Controller
         return $this->successResponse('Profile details', $user);
     }
 
-    public function update(Request $request)
+    public function update(UserUpdateRequest $request)
     {
-        $user = $request->user();
-
-        $validator = Validator::make($request->all(), [
-            'name' => ['required', 'string', 'max:255'],
-            'email' => [
-                'required',
-                'email',
-                'max:255',
-                Rule::unique('users', 'email')->ignore($user->id),
-            ],
-            'avatar' => [
-                'nullable',
-                'image',
-                'mimes:jpg,jpeg,png,webp',
-                'max:2048',
-            ],
-        ]);
-
-        if ($validator->fails()) {
-            return $this->errorResponse(
-                $validator->errors()->first(),
-                422,
-                $validator->errors()
-            );
-        }
-
-        $data = $validator->validated();
-
-        if ($request->hasFile('avatar')) {
-            $oldAvatar = $user->getRawOriginal('avatar');
-
-            if (
-                $oldAvatar &&
-                Storage::exists(str_replace('storage/', 'public/', $oldAvatar))
-            ) {
-                Storage::delete(str_replace('storage/', 'public/', $oldAvatar));
-            }
-
-            $path = $request->file('avatar')->storeAs(
-                'uploads/avatar',
-                time() . '.' . $request->file('avatar')->getClientOriginalExtension(),
-                'public'
-            );
-
-            $data['avatar'] = 'storage/' . $path;
-        } else {
-            unset($data['avatar']);
-        }
-
-        if ($user->email !== $data['email']) {
-            $data['email_verified_at'] = null;
-        }
-
-        $user->update($data);
-
-        return $this->successResponse(
-            'Profile updated successfully',
-            $user->fresh()
+        return $this->service->update(
+            $request->user(),
+            $request->validated()
         );
     }
 
@@ -154,5 +105,10 @@ class UserController extends Controller
             'Notification settings updated successfully',
             $user->fresh()->only($this->notificationFields)
         );
+    }
+
+    public function destroy(Request $request)
+    {
+        return $this->service->delete($request->user());
     }
 }

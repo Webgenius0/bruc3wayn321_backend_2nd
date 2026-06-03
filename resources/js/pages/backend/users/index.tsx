@@ -6,7 +6,8 @@ import Swal from "sweetalert2";
 
 interface User {
     id: number;
-    name: string;
+    first_name: string;
+    last_name: string;
     email: string;
     avatar: string;
     role: string;
@@ -48,7 +49,8 @@ export default function Index({ users, filters }: Props) {
     );
 
     const { data, setData, post, processing, reset } = useForm({
-        name: '',
+        first_name: '',
+        last_name: '',
         email: '',
         password: '',
         avatar: '',
@@ -82,7 +84,8 @@ export default function Index({ users, filters }: Props) {
         setEditId(user.id);
 
         setData({
-            name: user.name,
+            first_name: user.first_name,
+            last_name: user.last_name,
             email: user.email,
             password: '',
         });
@@ -303,7 +306,7 @@ export default function Index({ users, filters }: Props) {
                                                                 </div>
                                                                 <div className="flex-grow-1 ms-12">
                                                                     <h4 className="fw-medium fs-16 mb-0">
-                                                                        {user.name}
+                                                                        {user.first_name} {user.last_name}
                                                                     </h4>
                                                                 </div>
                                                             </div>

@@ -5,7 +5,6 @@ import ImageUpload from "@/pages/widget/image-upload";
 import {
     useForm,
     Link,
-    router,
 } from "@inertiajs/react";
 
 import { useState } from "react";
@@ -24,12 +23,15 @@ export default function Edit({
         post,
         errors,
     } = useForm({
-        name: user.name || "",
+        first_name: user.first_name || "",
+        last_name: user.last_name || "",
         email: user.email || "",
         password: "",
         password_confirmation: "",
         role: user.role || "",
         avatar: null as File | null,
+        bio: user.bio || "",
+        _method: "put",
     });
 
     /*
@@ -43,13 +45,8 @@ export default function Edit({
     ) => {
         e.preventDefault();
 
-        router.post(
+        post(
             `/admin/users/${user.id}`,
-            {
-                ...data,
-
-                _method: 'put',
-            },
             {
                 forceFormData: true,
 
@@ -83,13 +80,69 @@ export default function Edit({
                     <form
                         onSubmit={submit}
                     >
+                        {Object.keys(errors).length > 0 && (
+                            <div className="alert alert-danger mb-20">
+                                <ul className="mb-0 ps-3">
+                                    {Object.values(errors).map((
+                                        error,
+                                        index
+                                    ) => (
+                                        <li key={index}>
+                                            {error}
+                                        </li>
+                                    ))}
+                                </ul>
+                            </div>
+                        )}
+
                         <div className="row">
 
                             {/* Name */}
                             <div className="col-lg-6">
                                 <div className="mb-20">
                                     <label className="label fs-16 mb-2">
-                                        User Name
+                                        First Name
+                                    </label>
+
+                                    <div className="form-floating">
+                                        <input
+                                            type="text"
+                                            className="form-control"
+                                            placeholder="First name"
+                                            value={
+                                                data.first_name
+                                            }
+                                            onChange={(
+                                                e
+                                            ) =>
+                                                setData(
+                                                    "first_name",
+                                                    e
+                                                        .target
+                                                        .value
+                                                )
+                                            }
+                                        />
+
+                                        <label>
+                                            First name
+                                        </label>
+                                    </div>
+
+                                    {errors.first_name && (
+                                        <div className="text-danger mt-1">
+                                            {
+                                                errors.first_name
+                                            }
+                                        </div>
+                                    )}
+                                </div>
+                            </div>
+                            {/* Name */}
+                            <div className="col-lg-6">
+                                <div className="mb-20">
+                                    <label className="label fs-16 mb-2">
+                                        Last Name
                                     </label>
 
                                     <div className="form-floating">
@@ -98,13 +151,12 @@ export default function Edit({
                                             className="form-control"
                                             placeholder="User name"
                                             value={
-                                                data.name
-                                            }
+                                                data.last_name}
                                             onChange={(
                                                 e
                                             ) =>
                                                 setData(
-                                                    "name",
+                                                    "last_name",
                                                     e
                                                         .target
                                                         .value
@@ -117,10 +169,10 @@ export default function Edit({
                                         </label>
                                     </div>
 
-                                    {errors.name && (
+                                    {errors.last_name && (
                                         <div className="text-danger mt-1">
                                             {
-                                                errors.name
+                                                errors.last_name
                                             }
                                         </div>
                                     )}
@@ -278,6 +330,48 @@ export default function Edit({
                                             ></i>
                                         </button>
                                     </div>
+
+                                    {errors.password_confirmation && (
+                                        <div className="text-danger mt-1">
+                                            {
+                                                errors.password_confirmation
+                                            }
+                                        </div>
+                                    )}
+                                </div>
+                            </div>
+
+                            {/* Confirm Password */}
+                            <div className="col-lg-12">
+                                <div className="mb-20">
+                                    <label className="label fs-16 mb-2">
+                                        About
+                                    </label>
+
+                                    <div className="position-relative">
+                                        <textarea className="form-control pe-5" value={
+                                            data.bio
+                                        }
+
+                                            onChange={(
+                                                e
+                                            ) =>
+                                                setData(
+                                                    "bio",
+                                                    e
+                                                        .target
+                                                        .value
+                                                )
+                                            }></textarea>
+                                    </div>
+
+                                    {errors.bio && (
+                                        <div className="text-danger mt-1">
+                                            {
+                                                errors.bio
+                                            }
+                                        </div>
+                                    )}
                                 </div>
                             </div>
 
@@ -302,6 +396,14 @@ export default function Edit({
                                         )
                                     }
                                 />
+
+                                {errors.avatar && (
+                                    <div className="text-danger mt-1">
+                                        {
+                                            errors.avatar
+                                        }
+                                    </div>
+                                )}
                             </div>
 
                             {/* Submit */}
@@ -358,7 +460,7 @@ export default function Edit({
                                             .target
                                             .value
                                     )
-                                    
+
                                 }
                             >
                                 <option value="">
