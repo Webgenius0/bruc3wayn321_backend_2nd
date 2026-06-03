@@ -41,8 +41,8 @@ export default function AppLogo() {
                         }
                         alt="Logo"
                         style={{
-                            width: "100%",
-                            height: "auto",
+                            width: "auto",
+                            height: "120px",
                             objectFit: "contain",
                         }}
                     />
