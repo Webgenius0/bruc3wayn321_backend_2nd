@@ -34,7 +34,7 @@ class AuthService
             if ($exists->email_verified_at != null) {
                 throw new \Exception('Email already verified');
             }
-            $otp = (new Otp)->generate($data['email'], 'numeric', 6, 15);
+            $otp = (new Otp)->generate($data['email'], 'numeric', 4, 15);
             Mail::to($data['email'])->send(new VerifyRegister($exists, $otp->token));
             return [
                 'token' => $otp->token,
@@ -124,7 +124,7 @@ class AuthService
         if (!$user) {
             throw new \Exception('User not found');
         }
-        $otp = (new Otp)->generate($email, 'numeric', 6, 15);
+        $otp = (new Otp)->generate($email, 'numeric', 4, 15);
         Mail::to($email)->send(new ForgetPassword($user, $otp->token));
 
         return $otp->token;

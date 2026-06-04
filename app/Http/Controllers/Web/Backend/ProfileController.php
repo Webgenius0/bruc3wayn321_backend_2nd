@@ -41,7 +41,7 @@ class ProfileController extends Controller
             'email' => [
                 'required',
                 'email',
-                'unique:users,email,' . auth()->id(),
+                'unique:users,email,' . Auth::id(),
             ],
 
             'avatar' => [
