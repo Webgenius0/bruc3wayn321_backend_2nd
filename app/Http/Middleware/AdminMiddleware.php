@@ -11,33 +11,33 @@ class AdminMiddleware
 {
     /**
      * Handle an incoming request.
-     *
-     * @param  \Closure(\Illuminate\Http\Request): (\Symfony\Component\HttpFoundation\Response)  $next
      */
     public function handle(Request $request, Closure $next): Response
     {
-        $user = $request->user(); // Sanctum user
+        $user = $request->user(); // Works for both Sanctum & session
 
         if (!$user || $user->role !== 'admin') {
 
+            // ✅ API Requests (Sanctum / SPA API)
             if ($request->expectsJson() || $request->is('api/*')) {
-                // API: revoke token
+
                 if ($user && $request->bearerToken()) {
-                    $request->user()->currentAccessToken()->delete();
+                    $user->currentAccessToken()?->delete();
                 }
-                return response()->json(['message' => 'Unauthorized'], 403);
-            } else {
-                // Web: log out
 
-                // Web / Session guard
-                if (Auth::guard('web')->check()) {
-                    Auth::guard('web')->logout();
-                }
-                return redirect()->route('login')->with('t-error', 'Unauthorized access');
+                return response()->json([
+                    'message' => 'Unauthorized'
+                ], 403);
             }
+
+            // ✅ Inertia (Web Requests)
+            Auth::guard('web')->logout();
+
+            // Important: Inertia needs a redirect, not JSON
+            return redirect()
+                ->route('login')
+                ->with('error', 'Unauthorized access');
         }
-
-
 
         return $next($request);
     }
