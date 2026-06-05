@@ -17,38 +17,19 @@ export default function AppLogo() {
     const { setting } = usePage().props as any;
     const theme = document.body.getAttribute('data-theme');
 
-    return (
-        (theme == 'dark' ?
-            (
-                <>
-                    <img
-                        src={'/' +
-                            setting?.dark_logo
-                        }
-                        alt="Logo"
-                        style={{
-                            width: "auto",
-                            height: "120px",
-                            objectFit: "contain",
-                        }}
-                    />
-                </>
-            ) : (
-                <>
-                    <img
-                        src={'/' +
-                            setting?.light_logo
-                        }
-                        alt="Logo"
-                        style={{
-                            width: "auto",
-                            height: "120px",
-                            objectFit: "contain",
-                        }}
-                    />
-                </>
-            )
-        )
+    const logo = theme == 'dark' ? setting?.dark_logo: setting?.light_logo;
 
+    return (
+        <img
+            src={'/' +
+                logo
+            }
+            alt="Logo"
+            style={{
+                width: "auto",
+                height: "120px",
+                objectFit: "contain",
+            }}
+        />
     );
 }
