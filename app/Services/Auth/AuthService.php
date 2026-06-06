@@ -59,7 +59,7 @@ class AuthService
         // dd($data);
 
         $user = $this->repository->createUser($data);
-        $otp = (new Otp)->generate($data['email'], 'numeric', 6, 15);
+        $otp = (new Otp)->generate($data['email'], 'numeric', 4, 15);
         return [
             'token' => $otp->token,
             'user' => $user,
