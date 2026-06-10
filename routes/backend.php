@@ -5,6 +5,7 @@ use App\Http\Controllers\Web\Backend\DashboardController;
 use App\Http\Controllers\Web\Backend\DynamicPageController;
 use App\Http\Controllers\Web\Backend\FaqController;
 use App\Http\Controllers\Web\Backend\LogController;
+use App\Http\Controllers\Web\Backend\Post\PostController;
 use App\Http\Controllers\Web\Backend\ProfileController;
 use App\Http\Controllers\Web\Backend\QueueController;
 use App\Http\Controllers\Web\Backend\SystemSettingsController;
@@ -23,6 +24,19 @@ Route::middleware(['auth:sanctum', 'admin'])->prefix('admin')->group(function ()
     Route::get('/user/show/{id}', [UserController::class, 'show'])->name('admin.users.show');
     Route::put('/users/{id}', [UserController::class, 'update'])->name('admin.users.update');
     Route::delete('/users/{user}', [UserController::class, 'destroy'])->name('admin.users.destroy');
+
+
+    // Post CRUD routes
+    Route::get('/posts', [PostController::class, 'index'])->name('admin.posts.index');
+    Route::get('/post/show/{post:slug}', [PostController::class, 'show'])->name('admin.posts.show');
+    Route::get('/post/edit/{post:slug}', [PostController::class, 'edit'])->name('admin.posts.edit');
+
+    Route::get('/posts/create', [PostController::class, 'create'])->name('admin.posts.create');
+    Route::post('/posts', [PostController::class, 'store'])->name('admin.posts.store');
+    // Route::get('/posts/{post}', [PostController::class, 'show'])->name('admin.posts.show');
+    // Route::get('/posts/{post}/edit', [PostController::class, 'edit'])->name('admin.posts.edit');
+    Route::put('/posts/{post}', [PostController::class, 'update'])->name('admin.posts.update');
+    Route::delete('/posts/{post}', [PostController::class, 'destroy'])->name('admin.posts.destroy');
     Route::get('users/{user}/sessions', [UserController::class, 'sessions'])->name('admin.users.sessions');
 
 

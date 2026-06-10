@@ -2,108 +2,155 @@
 
 namespace App\Http\Controllers\API\Post;
 
-use App\Models\Post;
-use Illuminate\Http\Request;
+use App\Concerns\ApiResponse;
 use App\Http\Controllers\Controller;
+use App\Http\Requests\PostStoreRequest;
+use App\Http\Requests\PostUpdateRequest;
+use App\Http\Resources\PostResource;
+use App\Models\Post;
+use App\Services\PostService;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
 
 class PostController extends Controller
 {
-    /**
-     * Display a listing of the latest posts.
-     */
-    public function latest(): JsonResponse
+    use ApiResponse;
+    protected PostService $service;
+
+    public function __construct(PostService $service)
     {
-        $posts = Post::latest()->get();
-        return response()->json([
-            'data' => $posts,
-            'meta' => ['type' => 'latest']
-        ]);
+        $this->service = $service;
+    }
+    public function latest()
+    {
+        $posts = Post::with([
+            'user',
+            'likes',
+        ])
+            ->withCount([
+                'likes',
+                'comments',
+                'views',
+            ])->latest()
+            ->paginate(10);
+
+        return $this->successResponse(
+            'Latest Posts',
+            PostResource::collection($posts)
+        );
     }
 
     /**
-     * Display a listing of trending posts.
+     * Trending posts
      */
     public function trending(): JsonResponse
     {
-        $posts = Post::trending()->get();
-        return response()->json([
-            'data' => $posts,
-            'meta' => ['type' => 'trending']
-        ]);
-    }
+        $posts = Post::with([
+            'user',
+            'likes',
+        ])
+            ->withCount([
+                'likes',
+                'comments',
+                'views',
+            ])->trending()
+            ->paginate(10);
 
+        return $this->successResponse(
+            'Trending Posts.',
+            PostResource::collection($posts)->resolve()
+        );
+    }
     /**
-     * Store a newly created post.
+     * Create post
      */
-    public function store(Request $request): JsonResponse
+    public function store(PostStoreRequest $request)
     {
-        $validated = $request->validate([
-            'user_id' => 'required|exists:users,id',
-            'slug' => 'required|unique:posts,slug',
-            'content' => 'nullable|string',
-            'location' => 'nullable|string',
-            'images' => 'nullable|array',
-            'audios' => 'nullable|array',
-            'videos' => 'nullable|array',
-            'is_draft' => 'sometimes|boolean',
-            'is_published' => 'sometimes|boolean',
-        ]);
-        $post = Post::create($validated);
-        return response()->json(['data' => $post], 201);
+        $post = $this->service->create($request->validated());
+
+        return $this->successResponse('Post create successfully', new PostResource($post));
     }
 
     /**
-     * Display the specified post (by slug).
+     * Show post
      */
     public function show(Post $post): JsonResponse
     {
-        return response()->json(['data' => $post]);
+        $postDetails = Post::where('id', $post->id)
+            ->with([
+                'user',
+                'likes',
+            ])
+            ->withCount([
+                'likes',
+                'comments',
+                'views',
+            ])
+            ->first();
+
+        return $this->successResponse('Post details', new PostResource($postDetails));
     }
 
     /**
-     * Update the specified post.
+     * Update post
      */
-    public function update(Request $request, Post $post): JsonResponse
+    public function update(PostUpdateRequest $request, Post $post): JsonResponse
     {
-        $validated = $request->validate([
-            'slug' => 'sometimes|unique:posts,slug,' . $post->id,
-            'content' => 'nullable|string',
-            'location' => 'nullable|string',
-            'images' => 'nullable|array',
-            'audios' => 'nullable|array',
-            'videos' => 'nullable|array',
-            'is_draft' => 'sometimes|boolean',
-            'is_published' => 'sometimes|boolean',
-        ]);
-        $post->update($validated);
-        return response()->json(['data' => $post]);
+        $post = $this->service->update(
+            $post,
+            $request->validated()
+        );
+
+        return $this->successResponse(
+            'Post updated successfully.',
+            new PostResource($post)
+        );
     }
 
     /**
-     * Remove the specified post.
+     * Delete post
      */
     public function destroy(Post $post): JsonResponse
     {
-        $post->delete();
-        return response()->json(null, 204);
+        $this->service->delete($post);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Post deleted successfully.'
+        ]);
     }
 
     /**
-     * Mark a post as draft.
+     * Save as draft
      */
     public function draft(Post $post): JsonResponse
     {
-        $post->update(['is_draft' => true]);
-        return response()->json(['data' => $post]);
+        $post->update([
+            'is_draft' => true,
+            'is_published' => false
+        ]);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Post saved as draft.',
+            'data' => $post
+        ]);
     }
 
     /**
-     * Publish a post.
+     * Publish post
      */
     public function publish(Post $post): JsonResponse
     {
-        $post->update(['is_published' => true, 'is_draft' => false]);
-        return response()->json(['data' => $post]);
+        $post->update([
+            'is_published' => true,
+            'is_draft' => false
+        ]);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Post published successfully.',
+            'data' => $post
+        ]);
     }
 }

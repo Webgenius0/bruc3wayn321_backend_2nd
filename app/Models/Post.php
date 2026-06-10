@@ -13,6 +13,8 @@ class Post extends Model
         'slug',
         'content',
         'location',
+        "latitude",
+        "longitude",
         'images',
         'audios',
         'videos',
@@ -52,12 +54,33 @@ class Post extends Model
         return $query->orderBy('created_at', 'desc');
     }
 
-    /**
-     * Scope a query to order by trending (placeholder uses updated_at).
-     */
+
     public function scopeTrending($query)
     {
-        return $query->orderBy('updated_at', 'desc');
+        // return $query->orderBy('updated_at', 'desc');
+        return $query
+            ->withCount([
+                'likes',
+                'comments',
+                'views'
+            ])
+            ->orderByDesc('likes_count')
+            ->orderByDesc('comments_count')
+            ->orderByDesc('views_count');
     }
 
+    public function likes()
+    {
+        return $this->hasMany(PostLike::class);
+    }
+
+    public function comments()
+    {
+        return $this->hasMany(PostComment::class);
+    }
+
+    public function views()
+    {
+        return $this->hasMany(PostView::class);
+    }
 }

@@ -101,6 +101,12 @@ const items: MenuItem[] = [
             },
         ],
     },
+    {
+        title: 'Posts',
+        href: '/admin/posts',
+        icon_name: 'article',
+        icon: 'material-symbols-outlined menu-icon',
+    },
 
     {
         title: 'Profile',

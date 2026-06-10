@@ -22,6 +22,12 @@ const mainNavItems: NavItem[] = [
         href: admin.dashboard.index(),
         icon: LayoutGrid,
     },
+    },
+    {
+        title: 'Posts',
+        href: admin.posts.index(),
+        icon: BookOpen,
+    },
 ];
 
 const footerNavItems: NavItem[] = [
