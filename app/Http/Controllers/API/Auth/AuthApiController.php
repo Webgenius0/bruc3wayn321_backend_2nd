@@ -38,6 +38,19 @@ class AuthApiController extends Controller
         );
     }
 
+    public function registerOtpResend(Request $request)
+    {
+        $result = $this->service->resendRegisterOtp(
+            $request->all()
+        );
+
+        return $this->successResponse(
+            // 'OTP has been resent to your email address.',
+            'A new OTP has been sent to your email address.',
+            $result
+        );
+    }
+
     public function verifyRegister(OtpVerify $request)
     {
         $validate = (new Otp)->validate(

@@ -8,6 +8,7 @@ use App\Mail\VerifyRegister;
 use App\Mail\WelcomeMail;
 use App\Models\User;
 use App\Repositories\Auth\AuthRepository;
+use Exception;
 use Ichtrojan\Otp\Otp;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
@@ -35,7 +36,9 @@ class AuthService
                 throw new \Exception('Email already verified');
             }
             $otp = (new Otp)->generate($data['email'], 'numeric', 4, 15);
+
             Mail::to($data['email'])->send(new VerifyRegister($exists, $otp->token));
+
             return [
                 'token' => $otp->token,
                 'user' => $exists,
@@ -63,6 +66,24 @@ class AuthService
         return [
             'token' => $otp->token,
             'user' => $user,
+        ];
+    }
+
+    public function resendRegisterOtp(array $data)
+    {
+        $user = $this->repository->findByEmail($data['email']);
+
+        if (!$user) {
+            throw new Exception('User not found.');
+        }
+
+
+        $otp = (new Otp)->generate($data['email'], 'numeric', 4, 15);
+
+        Mail::to($user->email)->send(new VerifyRegister($user, $otp->token));
+
+        return [
+            'email' => $user->email,
         ];
     }
 
