@@ -88,10 +88,15 @@ class PostController extends Controller
             ])
             ->first();
 
-        $post->views()->create([
-            'user_id' => auth()->id(),
-            'ip_address' => request()->ip(),
-        ]);
+        $post->views()->firstOrCreate(
+            [
+                'post_id' => $post->id,
+                'user_id' => auth()->id(),
+            ],
+            [
+                'ip_address' => request()->ip(),
+            ]
+        );
 
         return $this->successResponse('Post details', new PostResource($postDetails));
     }
