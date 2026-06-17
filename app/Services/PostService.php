@@ -68,7 +68,41 @@ class PostService
 
     public function getLatestPosts($limit = 20)
     {
-        return $this->repository->getLatest($limit);
+        return $this->repository
+            ->getLatest($limit)
+            ->map(function ($post) {
+
+                $files = [];
+
+                foreach ($post->images ?? [] as $image) {
+                    $files[] = [
+                        'type' => 'image',
+                        'url' => $image,
+                    ];
+                }
+
+                foreach ($post->videos ?? [] as $video) {
+                    $files[] = [
+                        'type' => 'video',
+                        'url' => $video,
+                    ];
+                }
+
+                foreach ($post->audios ?? [] as $audio) {
+                    $files[] = [
+                        'type' => 'audio',
+                        'url' => $audio,
+                    ];
+                }
+
+                $post->files = $files;
+
+                unset($post->images);
+                unset($post->videos);
+                unset($post->audios);
+
+                return $post;
+            });
     }
 
 
