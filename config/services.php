@@ -39,4 +39,8 @@ return [
         'key' => env('EXCHANGE_RATE_API_KEY'),
     ],
 
+    'openweather' => [
+        'api_key' => env('OPENWEATHER_API_KEY'),
+    ],
+
 ];

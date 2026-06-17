@@ -20,7 +20,7 @@ class PostService
         $data['user_id'] = auth()->id();
         $data['is_draft'] = $data['is_draft'] ? '1' : '0';
 
-        $data['is_published'] = $data['images'] ? '0' : '1';
+        $data['is_published'] = $data['is_published'] ? '0' : '1';
 
 
         $baseSlug = Str::slug(Str::words($data['content'] ?? 'post', 10, ''));

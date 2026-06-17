@@ -11,4 +11,11 @@ Route::controller(UserController::class)->prefix('user')->middleware(['auth:sanc
     Route::post('update-password', 'updatePassword');
     Route::post('notifications', 'updateNotifications');
     Route::delete('delete', 'destroy');
+
+    // Follow routes
+    Route::post('{user}/follow', 'follow');
+    Route::post('{user}/unfollow', 'unfollow');
+    Route::post('{user}/toggle-follow', 'toggleFollow');
+    Route::get('{user}/followers', 'getFollowers');
+    Route::get('{user}/following', 'getFollowing');
 });

@@ -6,6 +6,7 @@ use App\Concerns\ApiResponse;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\UpdatePassword;
 use App\Http\Requests\UserUpdateRequest;
+use App\Models\User;
 use App\Services\Auth\AuthService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -110,5 +111,135 @@ class UserController extends Controller
     public function destroy(Request $request)
     {
         return $this->service->delete($request->user());
+    }
+
+    /**
+     * Follow a user
+     */
+    public function follow(Request $request, User $user)
+    {
+        $currentUser = $request->user();
+
+        // Prevent users from following themselves
+        if ($currentUser->id === $user->id) {
+            return $this->errorResponse(
+                'You cannot follow yourself',
+                422
+            );
+        }
+
+        // Check if already following
+        if ($currentUser->isFollowing($user)) {
+            return $this->errorResponse(
+                'You are already following this user',
+                409
+            );
+        }
+
+        // Create follow relationship
+        $currentUser->following()->attach($user->id);
+
+        return $this->successResponse(
+            'Successfully followed user',
+            [
+                'user_id' => $user->id,
+                'followers_count' => $user->getFollowersCount(),
+                'following_count' => $currentUser->getFollowingCount(),
+            ]
+        );
+    }
+
+    /**
+     * Unfollow a user
+     */
+    public function unfollow(Request $request, User $user)
+    {
+        $currentUser = $request->user();
+
+        // Check if not following
+        if (!$currentUser->isFollowing($user)) {
+            return $this->errorResponse(
+                'You are not following this user',
+                409
+            );
+        }
+
+        // Remove follow relationship
+        $currentUser->following()->detach($user->id);
+
+        return $this->successResponse(
+            'Successfully unfollowed user',
+            [
+                'user_id' => $user->id,
+                'followers_count' => $user->getFollowersCount(),
+                'following_count' => $currentUser->getFollowingCount(),
+            ]
+        );
+    }
+
+    /**
+     * Toggle follow status
+     */
+    public function toggleFollow(Request $request, User $user)
+    {
+        $currentUser = $request->user();
+
+        // Prevent users from following themselves
+        if ($currentUser->id === $user->id) {
+            return $this->errorResponse(
+                'You cannot follow yourself',
+                422
+            );
+        }
+
+        $isFollowing = $currentUser->isFollowing($user);
+
+        if ($isFollowing) {
+            $currentUser->following()->detach($user->id);
+            $message = 'Successfully unfollowed user';
+        } else {
+            $currentUser->following()->attach($user->id);
+            $message = 'Successfully followed user';
+        }
+
+        return $this->successResponse(
+            $message,
+            [
+                'user_id' => $user->id,
+                'is_following' => !$isFollowing,
+                'followers_count' => $user->getFollowersCount(),
+                'following_count' => $currentUser->getFollowingCount(),
+            ]
+        );
+    }
+
+    /**
+     * Get user followers
+     */
+    public function getFollowers(Request $request, User $user)
+    {
+        $followers = $user->followers()
+            ->select('users.id', 'users.name', 'users.user_name', 'users.avatar')
+            ->paginate(15);
+
+        return $this->successResponse(
+            'Followers retrieved',
+            $followers
+        );
+    }
+
+    /**
+     * Get user following
+     */
+    public function getFollowing(Request $request, User $user)
+    {
+        $following = $user->following()
+            ->select('users.id', 'users.name', 'users.user_name', 'users.avatar')
+            ->paginate(15);
+
+        return $this->successResponse(
+            'Following retrieved',
+            $following
+        );
     }
 }
