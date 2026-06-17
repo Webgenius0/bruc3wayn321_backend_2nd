@@ -21,21 +21,27 @@ class PostResource extends JsonResource
         foreach (($this->images ?? []) as $image) {
             $files[] = [
                 'type' => 'image',
-                'url'  =>  url($image),
+                'url'  =>  is_string($image)
+                    ? asset($image)
+                    : $image,
             ];
         }
 
         foreach (($this->videos ?? []) as $video) {
             $files[] = [
                 'type' => 'video',
-                'url'  => url($video),
+                'url'  => is_string($video)
+                    ? asset($video)
+                    : $video,
             ];
         }
 
         foreach (($this->audios ?? []) as $audio) {
             $files[] = [
                 'type' => 'audio',
-                'url'  => url($audio),
+                'url'  => is_string($audio)
+                    ? asset($audio)
+                    : $audio,
             ];
         }
         // return parent::toArray($request);
@@ -51,6 +57,8 @@ class PostResource extends JsonResource
                 "name"           => $this->user->first_name . " " . $this->user->last_name,
                 "user_name"     => $this->user->user_name,
                 "avatar"        => $this->user->avatar,
+                "is_following"  => auth()->check() ? auth()->user()->isFollowing($this->user) : false,
+                "followers_count" => $this->user->getFollowersCount(),
             ] : '',
             'location' => $this->location ?? '',
             'files' => $files,

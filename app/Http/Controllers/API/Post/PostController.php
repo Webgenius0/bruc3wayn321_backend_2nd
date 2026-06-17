@@ -8,6 +8,7 @@ use App\Http\Requests\PostStoreRequest;
 use App\Http\Requests\PostUpdateRequest;
 use App\Http\Resources\PostResource;
 use App\Models\Post;
+use App\Models\User;
 use App\Services\PostService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -21,6 +22,60 @@ class PostController extends Controller
     {
         $this->service = $service;
     }
+
+    /**
+     * Get posts from a specific user
+     */
+    public function userPosts($username): JsonResponse
+    {
+        $user = User::where('user_name', $username)->firstOrFail();
+
+        $posts = Post::where('user_id', $user->id)
+            ->with([
+                'user',
+                'likes',
+            ])
+            ->withCount([
+                'likes',
+                'comments',
+                'views',
+            ])
+            ->latest()
+            ->paginate(10);
+
+        return $this->successResponse(
+            $user->first_name . ' Posts',
+            PostResource::collection($posts)
+        );
+    }
+
+    /**
+     * Get posts from users that current user follows
+     */
+    public function followersPosts(): JsonResponse
+    {
+        $currentUser = auth()->user();
+        $followingUserIds = $currentUser->following()->pluck('users.id');
+
+        $posts = Post::whereIn('user_id', $followingUserIds)
+            ->with([
+                'user',
+                'likes',
+            ])
+            ->withCount([
+                'likes',
+                'comments',
+                'views',
+            ])
+            ->latest()
+            ->paginate(10);
+
+        return $this->successResponse(
+            'Posts from followers',
+            PostResource::collection($posts)
+        );
+    }
+
     public function latest()
     {
         $posts = Post::with([
