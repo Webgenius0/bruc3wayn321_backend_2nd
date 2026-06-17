@@ -15,6 +15,29 @@ class PostResource extends JsonResource
      */
     public function toArray(Request $request): array
     {
+
+        $files = [];
+
+        foreach (($this->images ?? []) as $image) {
+            $files[] = [
+                'type' => 'image',
+                'url'  =>  url($image),
+            ];
+        }
+
+        foreach (($this->videos ?? []) as $video) {
+            $files[] = [
+                'type' => 'video',
+                'url'  => url($video),
+            ];
+        }
+
+        foreach (($this->audios ?? []) as $audio) {
+            $files[] = [
+                'type' => 'audio',
+                'url'  => url($audio),
+            ];
+        }
         // return parent::toArray($request);
         return [
 
@@ -30,6 +53,7 @@ class PostResource extends JsonResource
                 "avatar"        => $this->user->avatar,
             ] : '',
             'location' => $this->location ?? '',
+            'files' => $files,
             'images' => collect($this->images ?? [])
                 ->map(function ($image) {
                     return is_string($image)
