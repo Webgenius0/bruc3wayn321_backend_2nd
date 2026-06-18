@@ -40,6 +40,7 @@ class PostController extends Controller
                 'comments',
                 'views',
             ])
+            ->where('visibility', true)
             ->latest()
             ->paginate(10);
 
@@ -67,6 +68,7 @@ class PostController extends Controller
                 'comments',
                 'views',
             ])
+            ->where('visibility', true)
             ->latest()
             ->paginate(10);
 
@@ -87,6 +89,7 @@ class PostController extends Controller
                 'comments',
                 'views',
             ])->latest()
+            ->where('visibility', true)
             ->paginate(10);
 
         return $this->successResponse(
@@ -109,6 +112,7 @@ class PostController extends Controller
                 'comments',
                 'views',
             ])->trending()
+            ->where('visibility', true)
             ->paginate(10);
 
         return $this->successResponse(
