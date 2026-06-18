@@ -14,6 +14,8 @@ Route::controller(PostController::class)->middleware('auth:sanctum')->group(func
     Route::post('posts', 'store');
     Route::get('post/details/{post:slug}', 'show');
     Route::put('post/update/{post:slug}', 'update');
+    Route::post('post/{post:slug}/visibility', 'postVisibility');
+    Route::get('post/my-post', 'myPosts');
 });
 
 Route::controller(LikeCommentApiController::class)->middleware('auth:sanctum')->group(function () {

@@ -242,4 +242,31 @@ class UserController extends Controller
             $following
         );
     }
+    public function updateCoverImage(Request $request)
+    {
+        // $request->validate([
+        //     'cover_image' => 'required'
+        // ]);
+
+        $image = $request->cover_image;
+
+        $fileName = time() . "." . $image->getClientOriginalExtension();
+
+        $path = $image->storeAs('cover-image', $fileName, 'public');
+
+        $storagePath = "storage/" . $path;
+
+        // dd($storagePath);
+        $user = auth()->user();
+        // dd($user->id);
+
+        $following = $user->update([
+            'cover_image' => $storagePath,
+        ]);
+
+        return $this->successResponse(
+            'Successfully update cover image',
+            $following
+        );
+    }
 }

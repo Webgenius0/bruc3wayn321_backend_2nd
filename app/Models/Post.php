@@ -18,16 +18,18 @@ class Post extends Model
         'images',
         'audios',
         'videos',
+        'visibility',
         'is_draft',
         'is_published',
     ];
 
     protected $casts = [
-        'images' => 'array',
-        'audios' => 'array',
-        'videos' => 'array',
-        'is_draft' => 'boolean',
-        'is_published' => 'boolean',
+        'images'        => 'array',
+        'audios'        => 'array',
+        'videos'        => 'array',
+        'visibility'    => 'boolean',
+        'is_draft'      => 'boolean',
+        'is_published'  => 'boolean',
     ];
 
     /**
@@ -57,7 +59,6 @@ class Post extends Model
 
     public function scopeTrending($query)
     {
-        // return $query->orderBy('updated_at', 'desc');
         return $query
             ->withCount([
                 'likes',

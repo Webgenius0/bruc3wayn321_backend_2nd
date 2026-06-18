@@ -218,4 +218,44 @@ class PostController extends Controller
             'data' => $post
         ]);
     }
+
+    /**
+     * Publish post
+     */
+    public function postVisibility(Post $post): JsonResponse
+    {
+        $post->update([
+            'visibility' => !$post->visibility,
+        ]);
+
+        return response()->json([
+            'success' => true,
+            'message' => $post->visibility
+                ? 'Post published successfully.'
+                : 'Post hidden successfully.',
+            'data' => $post->fresh()
+        ]);
+    }
+
+
+    public function myPosts(Request $request): JsonResponse
+    {
+        $posts = Post::where('user_id', auth()->id())
+            ->with([
+                'user',
+                'likes',
+            ])
+            ->withCount([
+                'likes',
+                'comments',
+                'views',
+            ])
+            ->latest()
+            ->paginate($request->get('per_page', 15));
+
+        return $this->successResponse(
+            'My posts retrieved successfully.',
+            PostResource::collection($posts)
+        );
+    }
 }

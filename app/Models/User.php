@@ -31,6 +31,7 @@ class User extends Authenticatable implements PasskeyUser
         'email',
         'password',
         'avatar',
+        'cover_image',
         'role',
         'email_verified_at',
         'remember_token',
@@ -70,6 +71,16 @@ class User extends Authenticatable implements PasskeyUser
     }
 
     public function getAvatarAttribute($value)
+    {
+        if (!$value) {
+            return null;
+        }
+        if (request()->is('api/*')) {
+            return asset($value);
+        }
+        return $value;
+    }
+    public function getCoverImageAttribute($value)
     {
         if (!$value) {
             return null;
