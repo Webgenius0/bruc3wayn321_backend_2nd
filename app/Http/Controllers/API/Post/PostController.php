@@ -42,7 +42,7 @@ class PostController extends Controller
             ])
             ->where('visibility', true)
             ->latest()
-            ->paginate(10);
+            ->get();
 
         return $this->successResponse(
             $user->first_name . ' Posts',
@@ -70,7 +70,7 @@ class PostController extends Controller
             ])
             ->where('visibility', true)
             ->latest()
-            ->paginate(10);
+            ->get();
 
         return $this->successResponse(
             'Posts from followers',
@@ -90,7 +90,7 @@ class PostController extends Controller
                 'views',
             ])->latest()
             ->where('visibility', true)
-            ->paginate(10);
+            ->get();
 
         return $this->successResponse(
             'Latest Posts',
@@ -113,7 +113,7 @@ class PostController extends Controller
                 'views',
             ])->trending()
             ->where('visibility', true)
-            ->paginate(10);
+            ->get();
 
         return $this->successResponse(
             'Trending Posts.',
