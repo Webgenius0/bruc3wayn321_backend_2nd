@@ -82,6 +82,7 @@ class PostResource extends JsonResource
                 ->map(fn($video) => asset($video))
                 ->values()
                 ->toArray(),
+            'visibility' => $this->visibility,
             'is_draft' => $this->is_draft,
             'is_published' => $this->is_published,
             'likes_count' => $this->likes_count ?? 0,
