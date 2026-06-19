@@ -16,7 +16,7 @@ class CurrencyController extends Controller
         Request $request,
         ExchangeRateService $exchangeRateService
     ) {
-        $base = $request->get('base', 'USD');
+        $base = $request->get('base', auth()->user()->currency);
         $currencies = Currency::where('is_active', true)
             ->when($request->search, function ($query) use ($request) {
                 $query->where(function ($q) use ($request) {
@@ -28,6 +28,7 @@ class CurrencyController extends Controller
             ->get();
 
         $rates = $exchangeRateService->getRates($base);
+
         $conversionRates = $rates['conversion_rates'] ?? [];
         // dd($rates);
         $data = $currencies->map(function ($currency) use ($conversionRates) {
