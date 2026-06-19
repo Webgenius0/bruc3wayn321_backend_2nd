@@ -10,7 +10,7 @@ import 'react-quill-new/dist/quill.snow.css';
 const appName = import.meta.env.VITE_APP_NAME || 'bruc3wayn321';
 
 createInertiaApp({
-    title: (title) => (title ? `${title} - ${appName}` : appName),
+    // title: (title) => (title ? `${title} - ${appName}` : appName),
     layout: (name) => {
         switch (true) {
             case name === 'welcome':

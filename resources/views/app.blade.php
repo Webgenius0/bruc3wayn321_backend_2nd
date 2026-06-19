@@ -43,7 +43,7 @@ $setting = \App\Models\Setting::first();
     @viteReactRefresh
     @vite(['resources/css/app.css', 'resources/js/app.tsx', "resources/js/pages/{$page['component']}.tsx"])
     <x-inertia::head>
-        <title>{{ config('app.name', 'Bruc3wayn321') }}</title>
+        <title>{{ $setting->site_name ?? config('app.name') }}</title>
     </x-inertia::head>
     <link href="{{asset('/backend/assets/css/sidebar-menu.css')}}" rel="stylesheet" />
     <link href="{{asset('/backend/assets/css/simplebar.css')}}" rel="stylesheet" />
@@ -57,6 +57,7 @@ $setting = \App\Models\Setting::first();
 </head>
 
 <body class="font-sans antialiased">
+
     <x-inertia::app />
 
     <script src="{{asset('/backend/assets/js/bootstrap.bundle.min.js')}}"></script>

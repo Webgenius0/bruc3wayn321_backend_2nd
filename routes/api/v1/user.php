@@ -12,6 +12,7 @@ Route::controller(UserController::class)->prefix('user')->middleware(['auth:sanc
     Route::post('notifications', 'updateNotifications');
     Route::delete('delete', 'destroy');
     Route::post('update/cover-image', 'updateCoverImage');
+    Route::post('update/currency', 'updateCurrency');
 
     // Follow routes
     Route::post('{user}/follow', 'follow');

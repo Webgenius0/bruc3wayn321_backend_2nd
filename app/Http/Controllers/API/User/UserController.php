@@ -244,9 +244,13 @@ class UserController extends Controller
     }
     public function updateCoverImage(Request $request)
     {
-        // $request->validate([
-        //     'cover_image' => 'required'
-        // ]);
+        $validate = Validator::make($request->all(), [
+            'cover_image' => 'required'
+        ]);
+
+        if ($validate->fails()) {
+            return $this->errorResponse($validate->errors()->first(), 422, $validate->errors());
+        }
 
         $image = $request->cover_image;
 
@@ -258,10 +262,33 @@ class UserController extends Controller
 
         // dd($storagePath);
         $user = auth()->user();
-        // dd($user->id);
+
 
         $following = $user->update([
             'cover_image' => $storagePath,
+        ]);
+
+        return $this->successResponse(
+            'Successfully update cover image',
+            $following
+        );
+    }
+    public function updateCurrency(Request $request)
+    {
+        $validate = Validator::make($request->all(), [
+            'currency_code' => 'required'
+        ]);
+
+        if ($validate->fails()) {
+            return $this->errorResponse($validate->errors()->first(), 422, $validate->errors());
+        }
+
+
+        $user = auth()->user();
+
+
+        $following = $user->update([
+            'currency' => $request->currency_code,
         ]);
 
         return $this->successResponse(

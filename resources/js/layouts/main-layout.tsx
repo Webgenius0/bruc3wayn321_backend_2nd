@@ -1,10 +1,13 @@
 import React from "react";
 import { usePage } from '@inertiajs/react';
+import { useEffect } from 'react';
 
 import MainNavbar from "@/components/main-component/main-navbar";
 import MainSidebar from "@/components/main-component/main-sidebar";
 import { useBackendScripts } from "@/hooks/use-backend-scripts";
 import { Toaster } from '@/components/ui/sonner';
+
+
 
 interface Props {
     title?: string;
@@ -22,6 +25,11 @@ export default function MainLayout({
 
     const page = usePage();
     const { setting } = page.props as any;
+
+
+    useEffect(() => {
+        document.title = setting?.site_name || 'Admin Panel';
+    }, [setting]);
 
     return (<>
         <Toaster

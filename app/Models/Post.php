@@ -48,6 +48,11 @@ class Post extends Model
         return $this->belongsTo(User::class);
     }
 
+    public function publisher(): BelongsTo
+    {
+        return $this->belongsTo(User::class);
+    }
+
     /**
      * Scope a query to order by latest created.
      */

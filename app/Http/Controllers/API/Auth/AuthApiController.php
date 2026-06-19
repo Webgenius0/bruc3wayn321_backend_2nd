@@ -13,6 +13,7 @@ use App\Models\User;
 use App\Services\Auth\AuthService;
 use Ichtrojan\Otp\Otp;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Password;
 use Illuminate\Support\Facades\Validator;
 
@@ -144,6 +145,7 @@ class AuthApiController extends Controller
         }
 
         $user->update([
+            'password' => Hash::make($request->password),
             'remember_token' => null,
         ]);
 

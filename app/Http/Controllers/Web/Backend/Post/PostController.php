@@ -20,7 +20,10 @@ class PostController extends Controller
 
         if ($request->filled('publisher')) {
             $query->whereHas('user', function ($q) use ($request) {
-                $q->where('name', 'like', "%{$request->publisher}%");
+                $q->where(function ($query) use ($request) {
+                    $query->where('first_name', 'like', '%' . $request->publisher . '%')
+                        ->orWhere('last_name', 'like', '%' . $request->publisher . '%');
+                });
             });
         }
 
@@ -31,7 +34,14 @@ class PostController extends Controller
             $query->whereDate('created_at', '<=', $request->date_to);
         }
 
-        $posts = $query->latest()->paginate(15)->withQueryString();
+        $posts = $query->latest()
+            ->paginate($request->items ?? 15)
+            ->through(function ($post) {
+                $post->created_at_formatted = $post->created_at->format('d M Y, h:i A');
+                return $post;
+            })
+            ->withQueryString();
+
 
         return Inertia::render('backend/posts/index', [
             'posts' => $posts,
