@@ -27,7 +27,7 @@ class ExchangeRateService
                     );
 
                 if (!$response->successful()) {
-                    throw new \Exception('Exchange API unavailable');
+                    throw new \Exception('Exchange unavailable');
                 }
 
                 return $response->json();

@@ -16,7 +16,8 @@ class CurrencyController extends Controller
         Request $request,
         ExchangeRateService $exchangeRateService
     ) {
-        $base = $request->get('base', auth()->user()->currency);
+        // dd(auth()->user()->currency);
+        $base = $request->get('base', auth()->user()->currency ?? "USD");
         $currencies = Currency::where('is_active', true)
             ->when($request->search, function ($query) use ($request) {
                 $query->where(function ($q) use ($request) {
