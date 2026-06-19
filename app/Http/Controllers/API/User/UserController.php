@@ -276,7 +276,8 @@ class UserController extends Controller
     public function updateCurrency(Request $request)
     {
         $validate = Validator::make($request->all(), [
-            'currency_code' => 'required'
+            'currency_code' => 'required',
+            'currency_flug' => 'required',
         ]);
 
         if ($validate->fails()) {
@@ -289,6 +290,7 @@ class UserController extends Controller
 
         $following = $user->update([
             'currency' => $request->currency_code,
+            'currency_flug' => $request->currency_flug,
         ]);
 
         return $this->successResponse(

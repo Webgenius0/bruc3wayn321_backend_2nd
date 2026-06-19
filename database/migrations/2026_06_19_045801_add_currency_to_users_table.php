@@ -13,6 +13,7 @@ return new class extends Migration
     {
         Schema::table('users', function (Blueprint $table) {
             $table->string('currency')->after('date_of_birth')->default('USD');
+            $table->string('currency_flug')->after('currency')->nullable();
         });
     }
 
@@ -23,7 +24,8 @@ return new class extends Migration
     {
         Schema::table('users', function (Blueprint $table) {
             $table->dropColumn([
-                'currency'
+                'currency',
+                'currency_flug',
             ]);
         });
     }

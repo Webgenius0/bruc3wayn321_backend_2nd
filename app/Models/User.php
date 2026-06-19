@@ -38,6 +38,7 @@ class User extends Authenticatable implements PasskeyUser
         'phone',
         'date_of_birth',
         'currency',
+        'currency_flug',
 
         "email_notifications",
         "push_notifications",
