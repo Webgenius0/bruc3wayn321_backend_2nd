@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "5614a235c1f25b60f3d62f38cd565dc1",
+    "content-hash": "2b109544340167a1776d836ce5472d13",
     "packages": [
         {
             "name": "bacon/bacon-qr-code",
@@ -7747,6 +7747,48 @@
                 "source": "https://github.com/tijsverkoyen/CssToInlineStyles/tree/v2.4.0"
             },
             "time": "2025-12-02T11:56:42+00:00"
+        },
+        {
+            "name": "twopoint0/reverb-chat",
+            "version": "v1.0.0",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/PronayBormon/reverb-chat.git",
+                "reference": "aaf1352a9defaf6c9dbfb63a5c258cd4d760e047"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/PronayBormon/reverb-chat/zipball/aaf1352a9defaf6c9dbfb63a5c258cd4d760e047",
+                "reference": "aaf1352a9defaf6c9dbfb63a5c258cd4d760e047",
+                "shasum": ""
+            },
+            "require": {
+                "illuminate/support": "^11.0|^12.0|^13.0",
+                "php": "^8.2"
+            },
+            "type": "library",
+            "extra": {
+                "laravel": {
+                    "providers": [
+                        "Twopoint0\\ReverbChat\\ReverbChatServiceProvider"
+                    ]
+                }
+            },
+            "autoload": {
+                "psr-4": {
+                    "Twopoint0\\ReverbChat\\": "src/"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "description": "Realtime chat package using Laravel Reverb",
+            "support": {
+                "issues": "https://github.com/PronayBormon/reverb-chat/issues",
+                "source": "https://github.com/PronayBormon/reverb-chat/tree/v1.0.0"
+            },
+            "time": "2026-04-10T08:23:53+00:00"
         },
         {
             "name": "vlucas/phpdotenv",
