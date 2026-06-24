@@ -14,6 +14,8 @@ use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\Rule;
+use Twopoint0\ReverbChat\Models\Chat;
+use Twopoint0\ReverbChat\Models\ChatMessageAttachment;
 
 class UserController extends Controller
 {
@@ -242,6 +244,7 @@ class UserController extends Controller
             $following
         );
     }
+
     public function updateCoverImage(Request $request)
     {
         $validate = Validator::make($request->all(), [
@@ -253,16 +256,12 @@ class UserController extends Controller
         }
 
         $image = $request->cover_image;
-
         $fileName = time() . "." . $image->getClientOriginalExtension();
-
         $path = $image->storeAs('cover-image', $fileName, 'public');
-
         $storagePath = "storage/" . $path;
 
         // dd($storagePath);
         $user = auth()->user();
-
 
         $following = $user->update([
             'cover_image' => $storagePath,
@@ -273,6 +272,7 @@ class UserController extends Controller
             $following
         );
     }
+
     public function updateCurrency(Request $request)
     {
         $validate = Validator::make($request->all(), [
@@ -284,9 +284,7 @@ class UserController extends Controller
             return $this->errorResponse($validate->errors()->first(), 422, $validate->errors());
         }
 
-
         $user = auth()->user();
-
 
         $following = $user->update([
             'currency' => $request->currency_code,
@@ -297,5 +295,62 @@ class UserController extends Controller
             'Successfully update cover image',
             $following
         );
+    }
+
+    public function userDetails($id)
+    {
+        $user = User::find($id);
+
+        $isFollowing = auth()->user()->isFollowing($user);
+
+        $user['is_followed'] = $isFollowing;
+
+        // dd($user);
+
+        if (!$user) {
+            return $this->errorResponse('User not found', 404);
+        }
+
+        return $this->successResponse(
+            'Successfully details',
+            $user
+        );
+    }
+
+    public function attachmentList($id)
+    {
+        $chat = Chat::with([
+            'messages.attachments'
+        ])->find($id);
+
+        if (!$chat) {
+            return $this->errorResponse('Chat not found', 404);
+        }
+
+        $attachments = $chat->messages
+            ->pluck('attachments')
+            ->flatten()
+            ->values();
+
+
+        return $this->successResponse('Attachment List', $attachments, 200);
+    }
+    public function linksList($id)
+    {
+        $chat = Chat::with('messages')->find($id);
+
+        if (!$chat) {
+            return $this->errorResponse('Chat not found', 404);
+        }
+
+        $links = $chat->messages
+            ->pluck('links')
+            ->filter()
+            ->flatMap(function ($item) {
+                return json_decode($item, true) ?? [];
+            })
+            ->values();
+
+        return $this->successResponse('Links List', $links, 200);
     }
 }
