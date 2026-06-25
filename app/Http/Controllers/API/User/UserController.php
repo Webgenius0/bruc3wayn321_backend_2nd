@@ -299,16 +299,6 @@ class UserController extends Controller
 
     public function userDetails($id)
     {
-<<<<<<< HEAD
-
-        $user = User::find($id);
-
-        return $this->successResponse(
-            'user details',
-            $user
-        );
-    }
-=======
         $user = User::find($id);
 
         $isFollowing = auth()->user()->isFollowing($user);
@@ -363,5 +353,4 @@ class UserController extends Controller
 
         return $this->successResponse('Links List', $links, 200);
     }
->>>>>>> 7a70739b444ed247a5670cef3a097dfb8554064b
 }

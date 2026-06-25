@@ -28,15 +28,11 @@ class PostController extends Controller
      */
     public function userPosts($id): JsonResponse
     {
-<<<<<<< HEAD
-        $user = User::where('id', $id)->firstOrFail();
-=======
         $user = User::findOrFail($id);
 
         $isFollowing = auth()->user()->isFollowing($user);
 
         // dd($isFollowing);
->>>>>>> 7a70739b444ed247a5670cef3a097dfb8554064b
 
         $posts = Post::where('user_id', $user->id)
             ->with([
