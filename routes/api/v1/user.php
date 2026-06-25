@@ -20,4 +20,5 @@ Route::controller(UserController::class)->prefix('user')->middleware(['auth:sanc
     Route::post('{user}/toggle-follow', 'toggleFollow');
     Route::get('{user}/followers', 'getFollowers');
     Route::get('{user}/following', 'getFollowing');
+    Route::get('{id}/details', 'userDetails');
 });

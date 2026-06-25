@@ -2,8 +2,8 @@
 
 namespace App\Services;
 
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Http;
-use Illuminate\Http\Client\RequestException;
 
 class OpenWeatherService
 {
@@ -17,21 +17,29 @@ class OpenWeatherService
     }
 
     /**
-    * Get current weather by city name.
-    */
-
+     * Get current weather by city name.
+     */
     public function currentByCity(string $city): array
     {
-        $response = Http::get(
-            "{$this->baseUrl}/weather",
-            [
-                'q'     => $city,
-                'appid' => $this->apiKey,
-                'units' => 'metric',
-            ]
+        return Cache::remember(
+            'weather_city_' . md5(strtolower($city)),
+            now()->addHour(),
+            function () use ($city) {
+
+                $response = Http::get(
+                    "{$this->baseUrl}/weather",
+                    [
+                        'q'     => $city,
+                        'appid' => $this->apiKey,
+                        'units' => 'metric',
+                    ]
+                );
+
+                $response->throw();
+
+                return $response->json();
+            }
         );
-        $response->throw();
-        return $response->json();
     }
 
     /**
@@ -41,19 +49,26 @@ class OpenWeatherService
         float $latitude,
         float $longitude
     ): array {
-        $response = Http::get(
-            "{$this->baseUrl}/weather",
-            [
-                'lat'   => $latitude,
-                'lon'   => $longitude,
-                'appid' => $this->apiKey,
-                'units' => 'metric',
-            ]
+        return Cache::remember(
+            'weather_coords_' . md5($latitude . '_' . $longitude),
+            now()->addHour(),
+            function () use ($latitude, $longitude) {
+
+                $response = Http::get(
+                    "{$this->baseUrl}/weather",
+                    [
+                        'lat'   => $latitude,
+                        'lon'   => $longitude,
+                        'appid' => $this->apiKey,
+                        'units' => 'metric',
+                    ]
+                );
+
+                $response->throw();
+
+                return $response->json();
+            }
         );
-
-        $response->throw();
-
-        return $response->json();
     }
 
     /**
@@ -63,18 +78,41 @@ class OpenWeatherService
         float $latitude,
         float $longitude
     ): array {
-        $response = Http::get(
-            "{$this->baseUrl}/forecast",
-            [
-                'lat'   => $latitude,
-                'lon'   => $longitude,
-                'appid' => $this->apiKey,
-                'units' => 'metric',
-            ]
+        return Cache::remember(
+            'weather_forecast_' . md5($latitude . '_' . $longitude),
+            now()->addHours(3),
+            function () use ($latitude, $longitude) {
+
+                $response = Http::get(
+                    "{$this->baseUrl}/forecast",
+                    [
+                        'lat'   => $latitude,
+                        'lon'   => $longitude,
+                        'appid' => $this->apiKey,
+                        'units' => 'metric',
+                    ]
+                );
+
+                $response->throw();
+
+                return $response->json();
+            }
+        );
+    }
+
+    /**
+     * Clear weather cache manually.
+     */
+    public function clearCoordinatesCache(
+        float $latitude,
+        float $longitude
+    ): void {
+        Cache::forget(
+            'weather_coords_' . md5($latitude . '_' . $longitude)
         );
 
-        $response->throw();
-
-        return $response->json();
+        Cache::forget(
+            'weather_forecast_' . md5($latitude . '_' . $longitude)
+        );
     }
 }

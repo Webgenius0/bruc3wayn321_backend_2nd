@@ -11,10 +11,6 @@ interface MenuItem extends SideNavItem {
     children?: MenuItem[];
 }
 
-// const { setting } = usePage().props as any;
-
-// console.log(setting + "===========================")
-
 const items: MenuItem[] = [
     {
         title: 'Dashboard',
@@ -29,6 +25,13 @@ const items: MenuItem[] = [
         icon_name: 'group',
         icon: 'material-symbols-outlined menu-icon',
     },
+    {
+        title: 'Posts',
+        href: '/admin/posts',
+        icon_name: 'article',
+        icon: 'material-symbols-outlined menu-icon',
+    },
+
 
     {
         title: 'Content',
@@ -101,13 +104,6 @@ const items: MenuItem[] = [
             },
         ],
     },
-    {
-        title: 'Posts',
-        href: '/admin/posts',
-        icon_name: 'article',
-        icon: 'material-symbols-outlined menu-icon',
-    },
-
     {
         title: 'Profile',
         href: '/admin/profile',

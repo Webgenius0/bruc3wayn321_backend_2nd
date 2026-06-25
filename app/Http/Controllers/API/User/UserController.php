@@ -273,6 +273,7 @@ class UserController extends Controller
             $following
         );
     }
+
     public function updateCurrency(Request $request)
     {
         $validate = Validator::make($request->all(), [
@@ -296,6 +297,17 @@ class UserController extends Controller
         return $this->successResponse(
             'Successfully update cover image',
             $following
+        );
+    }
+
+    public function userDetails($id)
+    {
+
+        $user = User::find($id);
+
+        return $this->successResponse(
+            'user details',
+            $user
         );
     }
 }

@@ -51,6 +51,12 @@ class User extends Authenticatable implements PasskeyUser
 
     protected $hidden = ['password', 'two_factor_secret', 'two_factor_recovery_codes', 'remember_token'];
 
+
+    public function destinations()
+    {
+        return $this->hasMany(UserDestination::class);
+    }
+
     /**
      * Get the attributes that should be cast.
      *

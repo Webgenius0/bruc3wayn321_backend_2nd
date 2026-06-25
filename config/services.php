@@ -42,5 +42,8 @@ return [
     'openweather' => [
         'api_key' => env('OPENWEATHER_API_KEY'),
     ],
+    'google' => [
+        'places_api_key' => env('GOOGLE_PLACES_API_KEY'),
+    ],
 
 ];

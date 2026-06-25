@@ -26,9 +26,9 @@ class PostController extends Controller
     /**
      * Get posts from a specific user
      */
-    public function userPosts($username): JsonResponse
+    public function userPosts($id): JsonResponse
     {
-        $user = User::where('user_name', $username)->firstOrFail();
+        $user = User::where('id', $id)->firstOrFail();
 
         $posts = Post::where('user_id', $user->id)
             ->with([
