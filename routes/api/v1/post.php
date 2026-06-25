@@ -8,7 +8,7 @@ Route::controller(PostController::class)->middleware('auth:sanctum')->group(func
     Route::get('posts/trending', 'trending');
     Route::get('posts/latest',   'latest');
     Route::get('posts/followers', 'followersPosts');
-    Route::get('posts/user/{id}', 'userPosts');
+    Route::get('posts/user/{users:id}', 'userPosts');
     Route::post('posts/{post:slug}/draft',    'draft');
     Route::post('posts/{post:slug}/publish', 'publish');
     Route::post('posts', 'store');

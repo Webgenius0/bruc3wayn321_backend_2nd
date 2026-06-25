@@ -20,5 +20,9 @@ Route::controller(UserController::class)->prefix('user')->middleware(['auth:sanc
     Route::post('{user}/toggle-follow', 'toggleFollow');
     Route::get('{user}/followers', 'getFollowers');
     Route::get('{user}/following', 'getFollowing');
-    Route::get('{id}/details', 'userDetails');
+
+
+    Route::get('{user_id}/details', 'userDetails');
+    Route::get('chat/{chat_id}/attachment/list', 'attachmentList');
+    Route::get('chat/{chat_id}/links/list', 'linksList');
 });
