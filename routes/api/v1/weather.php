@@ -13,7 +13,6 @@ Route::controller(DestinationController::class)->middleware('auth:sanctum')->gro
     Route::get('/destination/list', 'index');
     Route::get('/destination/details/{id}', 'show');
 
-
     Route::get('/my-destinations', 'mydestination');
     Route::get('/user-destinations/{user_id}', 'userDestination');
     Route::post('/destinations/save', 'store');

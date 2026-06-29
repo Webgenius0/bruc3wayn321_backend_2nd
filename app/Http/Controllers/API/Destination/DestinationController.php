@@ -19,7 +19,10 @@ class DestinationController extends Controller
     {
         return response()->json([
             'success' => true,
+            'lat' => $request->lat ?? '',
+            'lng' => $request->lng ?? '',
             'data' => $this->destinationService->list(
+                $request->all(),
                 $request->lat,
                 $request->lng
             ),
@@ -40,13 +43,14 @@ class DestinationController extends Controller
             'place_id' => ['required', 'string'],
         ]);
 
-        $this->service->save(
-            $request->place_id
-        );
+        $saved = $this->service->toggle($request->place_id);
 
         return response()->json([
             'success' => true,
-            'message' => 'Destination saved successfully.',
+            'message' => $saved
+                ? 'Destination saved successfully.'
+                : 'Destination removed successfully.',
+            'is_saved' => $saved,
         ]);
     }
 

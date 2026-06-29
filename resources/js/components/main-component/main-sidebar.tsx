@@ -31,6 +31,12 @@ const items: MenuItem[] = [
         icon_name: 'article',
         icon: 'material-symbols-outlined menu-icon',
     },
+    {
+        title: 'Messages',
+        href: '/admin/messages',
+        icon_name: 'message',
+        icon: 'material-symbols-outlined menu-icon',
+    },
 
 
     {

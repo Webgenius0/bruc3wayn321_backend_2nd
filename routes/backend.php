@@ -5,6 +5,7 @@ use App\Http\Controllers\Web\Backend\DashboardController;
 use App\Http\Controllers\Web\Backend\DynamicPageController;
 use App\Http\Controllers\Web\Backend\FaqController;
 use App\Http\Controllers\Web\Backend\LogController;
+use App\Http\Controllers\Web\Backend\MessageController;
 use App\Http\Controllers\Web\Backend\Post\PostController;
 use App\Http\Controllers\Web\Backend\ProfileController;
 use App\Http\Controllers\Web\Backend\QueueController;
@@ -76,4 +77,7 @@ Route::middleware(['auth:sanctum', 'admin'])->prefix('admin')->group(function ()
     Route::get('/failed-jobs', [QueueController::class, 'failed'])->name('admin.failed-jobs.index');
     Route::post('/failed-jobs/{id}/retry', [QueueController::class, 'retry'])->name('admin.failed-jobs.retry');
     Route::delete('/failed-jobs/{id}', [QueueController::class, 'destroy'])->name('admin.failed-jobs.destroy');
+
+
+    Route::get('/messages', [MessageController::class, 'index'])->name('admin.message.index');
 });

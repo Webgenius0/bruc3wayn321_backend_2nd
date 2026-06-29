@@ -9,6 +9,9 @@ This files table contents are outlined below>>>>>
 
 *******************************************
 **/
+::-webkit-scrollbar {
+    display: none;
+}
 @import url("https://fonts.googleapis.com/css2?family=Outfit:wght@100..900&display=swap");
 :root,
 [data-bs-theme=light] {
