@@ -58,6 +58,14 @@ class User extends Authenticatable implements PasskeyUser
     }
 
     /**
+     * Get all AI concierge conversations for this user.
+     */
+    public function aiConversations()
+    {
+        return $this->hasMany(AiConversation::class);
+    }
+
+    /**
      * Get the attributes that should be cast.
      *
      * @return array<string, string>

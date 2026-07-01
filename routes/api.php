@@ -25,4 +25,5 @@ Route::prefix('v1')->group(function () {
     require base_path('routes/api/v1/currency.php');
     require base_path('routes/api/v1/post.php');
     require base_path('routes/api/v1/weather.php');
+    require base_path('routes/api/v1/ai-concierge.php');
 });

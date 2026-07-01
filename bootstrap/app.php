@@ -33,5 +33,24 @@ return Application::configure(basePath: dirname(__DIR__))
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
-        //
+        $exceptions->render(function (\Symfony\Component\HttpKernel\Exception\NotFoundHttpException $e, $request) {
+            if ($request->is('api/*') || $request->expectsJson()) {
+                $message = $e->getMessage() ?: 'Resource not found';
+
+                // Clean up Laravel's default "No query results for model [App\Models\X] ID" message
+                if (str_contains($message, 'No query results for model')) {
+                    $model = class_basename(
+                        \Illuminate\Support\Str::between($message, '[', ']')
+                    );
+                    $message = "{$model} not found";
+                }
+
+                return response()->json([
+                    'success' => false,
+                    'code' => 404,
+                    'message' => $message,
+                    'errors' => null,
+                ], 404);
+            }
+        });
     })->create();

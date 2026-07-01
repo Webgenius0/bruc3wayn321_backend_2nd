@@ -39,7 +39,6 @@ Route::controller(UserBlockReportController::class)
         Route::post('{userId}/toggle-block', 'toggleBlock');
         Route::get('blocked/list', 'blockedList');
         Route::get('{userId}/block-status', 'blockStatus');
-
         // Report
         Route::post('{userId}/report', 'report');
     });
