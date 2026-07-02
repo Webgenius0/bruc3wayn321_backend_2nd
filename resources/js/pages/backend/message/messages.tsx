@@ -7,7 +7,7 @@ interface User {
     first_name: string;
     last_name: string;
     email: string;
-    image: string | null;
+    avatar: string | null;
 }
 
 interface Chat {
@@ -31,6 +31,7 @@ interface Message {
     message: string;
     user_id: number;
     created_at: string;
+    sender: User;
 }
 
 const limitWords = (text: string, limit: number) => {
@@ -109,6 +110,8 @@ export default function Messages({ chats, selectedChat, messages }: Props) {
         URL.revokeObjectURL(url);
     };
 
+    console.log(messages);
+
     return <>
 
         <div className="row">
@@ -145,8 +148,8 @@ export default function Messages({ chats, selectedChat, messages }: Props) {
                                                     <img
                                                         key={user.id}
                                                         src={
-                                                            user.image
-                                                                ? `/${user.image}`
+                                                            user.avatar
+                                                                ? `/${user.avatar}`
                                                                 : "/backend/assets/images/placholder.png"
                                                         }
                                                         alt={user.first_name}
@@ -204,7 +207,7 @@ export default function Messages({ chats, selectedChat, messages }: Props) {
                             {selectedChat.users.map((user) => (
                                 <div key={user.id} className="d-flex align-items-center">
                                     <div className="flex-shrink-0 position-relative">
-                                        <img alt={user.first_name} className="rounded-circle" src={user.image ? `/${user.image}` : "/backend/assets/images/placholder.png"} style={{ width: "65px", height: "65px", objectFit: "cover" }} />
+                                        <img alt={user.first_name} className="rounded-circle" src={user.avatar ? `/${user.avatar}` : "/backend/assets/images/placholder.png"} style={{ width: "65px", height: "65px", objectFit: "cover" }} />
                                         <span className="d-block border border-2 border-white bg-success rounded-circle position-absolute bottom-0 end-0" style={{ width: "10px", height: "10px", bottom: "5px !important", right: "3px !important" }}>
                                         </span>
                                     </div>
@@ -252,8 +255,8 @@ export default function Messages({ chats, selectedChat, messages }: Props) {
                                                     <div className="flex-shrink-0 ms-10">
                                                         <img
                                                             src={
-                                                                msgUser.image
-                                                                    ? `/${msgUser.image}`
+                                                                msgUser.avatar
+                                                                    ? `/${msgUser.avatar}`
                                                                     : "/backend/assets/images/placholder.png"
                                                             }
                                                             className="rounded-circle"
@@ -275,8 +278,8 @@ export default function Messages({ chats, selectedChat, messages }: Props) {
                                                 <div className="flex-shrink-0">
                                                     <img
                                                         src={
-                                                            msgUser.image
-                                                                ? `/${msgUser.image}`
+                                                            msg.sender.avatar
+                                                                ? `/${msg.sender.avatar}`
                                                                 : "/backend/assets/images/placholder.png"
                                                         }
                                                         className="rounded-circle"
@@ -290,6 +293,7 @@ export default function Messages({ chats, selectedChat, messages }: Props) {
 
                                                 <div className="flex-grow-1 ms-10">
                                                     <div>
+                                                        <p className="mb-0" style={{fontSize: "14px"}}>{msg.sender.first_name} {msg.sender.last_name}</p>
                                                         <p
                                                             className="lh-1-8 bg-light fs-16 d-inline-block"
                                                             style={{
@@ -312,59 +316,7 @@ export default function Messages({ chats, selectedChat, messages }: Props) {
                                 })}
                             </ul>
                         </div>
-                        {/* <div className="p-20">
-                            <div className="bg-light p-20 rounded-10 chat-submit">
-                                <div className="d-flex gap-2 flex-wrap align-items-center">
-                                    <div className="flex-shrink-0">
-                                        <ul className="p-0 mb-0 list-unstyled d-flex align-items-center" style={{ gap: "12px" }}>
-                                            <li>
-                                                <button className="bg-transparent p-0 border-0">
-                                                    <i className="material-symbols-outlined fs-20 text-body position-relative top-3 hover-text">
-                                                        sentiment_satisfied
-                                                    </i>
-                                                </button>
-                                            </li>
-                                            <li>
-                                                <button className="bg-transparent p-0 border-0">
-                                                    <i className="material-symbols-outlined fs-20 text-body position-relative top-3 hover-text">
-                                                        attach_file
-                                                    </i>
-                                                </button>
-                                            </li>
-                                            <li>
-                                                <button className="bg-transparent p-0 border-0">
-                                                    <i className="material-symbols-outlined fs-20 text-body position-relative top-3 hover-text">
-                                                        mic_none
-                                                    </i>
-                                                </button>
-                                            </li>
-                                            <li>
-                                                <button className="bg-transparent p-0 border-0">
-                                                    <i className="material-symbols-outlined fs-20 text-body position-relative top-3 hover-text">
-                                                        image
-                                                    </i>
-                                                </button>
-                                            </li>
-                                        </ul>
-                                    </div>
-                                    <div className="flex-grow-1 ms-20">
-                                        <form className="position-relative z-1 your-message-padding" style={{ paddingRight: "70px" }}>
-                                            <div className="form-floating">
-                                                <input className="form-control border-white" id="floatingInput2" placeholder="Type your message...." style={{ height: "57px", minHeight: "57px", padding: "10px 15px" }} type="text" />
-                                                <label htmlFor="floatingInput2" style={{ height: "57px", minHeight: "57px", padding: "16px 15px" }}>
-                                                    Type your message....
-                                                </label>
-                                            </div>
-                                            <button className="border-0 btn btn-primary p-0 position-absolute top-0 end-0" style={{ width: "57px", height: "57px" }} type="button">
-                                                <i className="material-symbols-outlined text-white" style={{ lineHeight: "57px" }}>
-                                                    send
-                                                </i>
-                                            </button>
-                                        </form>
-                                    </div>
-                                </div>
-                            </div>
-                        </div> */}
+                        
                     </div>
                 ) : (
                     <div className="card bg-white rounded-10 border border-white mb-4 d-flex align-items-center justify-content-center" style={{ height: "100%" }}>

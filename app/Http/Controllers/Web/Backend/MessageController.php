@@ -28,7 +28,7 @@ class MessageController extends Controller
                             'first_name' => $user->first_name,
                             'last_name' => $user->last_name,
                             'email' => $user->email,
-                            'image' => $user->image,
+                            'avatar' => $user->avatar,
                         ];
                     })->values(),
 
@@ -52,15 +52,20 @@ class MessageController extends Controller
                             'first_name' => $user->first_name,
                             'last_name' => $user->last_name,
                             'email' => $user->email,
-                            'image' => $user->image,
+                            'avatar' => $user->avatar,
                         ];
                     })->values(),
                 ];
 
-                $messages = $selectedChatModel->messages()->latest()->get();
+
+                $messages = $selectedChatModel->messages()
+                    ->with(['sender', 'attachments'])
+                    ->latest()
+                    ->get();
+
+                // dd($messages);
             }
         }
-
 
         return Inertia::render('backend/message/messages', [
             'chats' => $chats,

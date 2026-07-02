@@ -3,26 +3,33 @@ import React, { useState } from 'react';
 import { Head, Link, router, usePage, } from '@inertiajs/react';
 import { toast } from 'sonner';
 import Swal from "sweetalert2";
+
+
 interface PaginationLink {
     url: string | null;
     label: string;
     active: boolean;
 }
 
-interface PostsPagination {
+interface PaginationLink {
+    url: string | null;
+    label: string;
+    active: boolean;
+}
+
+interface PaginatedPosts {
     data: Post[];
-    total: any,
-    current_page: any,
-    last_page: any,
-    // total: number;
+    current_page: number;
+    last_page: number;
+    per_page: number;
+    total: number;
+    from: number;
+    to: number;
     links: PaginationLink[];
 }
 
 interface Props {
-    posts: {
-        data: Post[];
-    };
-
+    posts: PaginatedPosts;
     filters: {
         publisher?: string;
         date_from?: string;
@@ -34,6 +41,10 @@ interface Post {
     id: number;
     content?: any;
     user?: any;
+    total_likes?: number;
+    total_comments?: number;
+    total_views?: number;
+    image?: string;
     created_at_formatted?: string;
     slug?: string;
 }
@@ -67,60 +78,49 @@ export default function PostIndex({ posts, filters }: Props) {
 
         try {
             await router.delete(`/posts/${slug}`);
-
             toast.success("Post deleted successfully");
-
-
         } catch (error) {
             toast.error("Failed to delete post");
         }
     };
 
 
+    console.log(posts);
+
 
     return (
+
         <>
             <Head title="Post List" />
 
-            <div
-                className="main-content-container overflow-hidden"
-                style={{ minHeight: "75vh" }}
-            >
-
+            <div className="main-content-container overflow-hidden" style={{ minHeight: "75vh" }}>
                 <div className="row">
-
                     <div className="col-md-12">
                         <div className="card bg-white rounded-10 border border-white mb-4">
-
                             <div className="d-flex justify-content-between align-items-center flex-wrap gap-3 p-20">
-                                <div></div>
                                 {/* Filters */}
-
                                 <div className="d-flex align-items-center gap-2 flex-wrap">
-
                                     <div className="d-flex gap-2 ">
                                         <input
-                                        className="form-control"
-                                        placeholder="Search publisher"
-                                        type="text"
-                                        value={publisher}
-                                        onChange={(e) => setPublisher(e.target.value)}
+                                            className="form-control"
+                                            placeholder="Search publisher"
+                                            type="text"
+                                            value={publisher}
+                                            onChange={(e) => setPublisher(e.target.value)}
                                         // style={{ width: '250px' }}
-                                    />
-
-                                    <input
-                                        className="form-control"
-                                        type="date"
-                                        value={dateFrom}
-                                        onChange={(e) => setDateFrom(e.target.value)}
-                                    />
-
-                                    <input
-                                        className="form-control"
-                                        type="date"
-                                        value={dateTo}
-                                        onChange={(e) => setDateTo(e.target.value)}
-                                    />
+                                        />
+                                        <input
+                                            className="form-control"
+                                            type="date"
+                                            value={dateFrom}
+                                            onChange={(e) => setDateFrom(e.target.value)}
+                                        />
+                                        <input
+                                            className="form-control"
+                                            type="date"
+                                            value={dateTo}
+                                            onChange={(e) => setDateTo(e.target.value)}
+                                        />
                                     </div>
                                     <button
                                         className="btn btn-primary text-white"
@@ -141,8 +141,10 @@ export default function PostIndex({ posts, filters }: Props) {
                                         <thead>
                                             <tr>
                                                 <th>ID</th>
+                                                <th>Thumbnail</th>
                                                 <th>Content</th>
                                                 <th>Publisher</th>
+                                                <th>Activity</th>
                                                 <th>Created At</th>
                                                 <th className="text-end">Action</th>
                                             </tr>
@@ -151,17 +153,46 @@ export default function PostIndex({ posts, filters }: Props) {
                                         <tbody>
                                             {posts?.data?.length > 0 ? (
                                                 posts.data.map((post: Post) => (
-
+// console.log(post.images),
                                                     <tr key={post.id}>
                                                         <td>{post.id}</td>
+                                                        <td>
+                                                                <img
+                                                                    src={`/${post.image}`}
+                                                                    alt="Post"
+                                                                    width={60}
+                                                                    height={60}
+                                                                    style={{ objectFit: "cover", borderRadius: "6px" }}
+                                                                />
+                                                        </td>
                                                         <td>
                                                             {post.content?.length > 80
                                                                 ? `${post.content.substring(0, 80)}...`
                                                                 : post.content}
                                                         </td>
-
                                                         <td>
                                                             {post.user.first_name} {post.user.last_name}
+                                                        </td>
+                                                        <td>
+                                                            <table>
+                                                                <tbody>
+                                                                    <tr>
+                                                                        <td style={{ fontSize: "14px" }} className='p-0 '>Likes:</td>
+                                                                        <td style={{ fontSize: "14px" }} className='p-0  ps-2'><span className="badge bg-primary">{post?.total_likes ?? 0}</span></td>
+                                                                    </tr>
+                                                                    <tr>
+                                                                        <td style={{ fontSize: "14px" }} className='p-0 '>Comments:</td>
+                                                                        <td style={{ fontSize: "14px" }} className='p-0  ps-2'><span className="badge bg-primary">{post?.total_comments ?? 0}</span></td>
+                                                                    </tr>
+                                                                    <tr>
+                                                                        <td style={{ fontSize: "14px" }} className='p-0 '>Views:</td>
+                                                                        <td style={{ fontSize: "14px" }} className='p-0  ps-2'><span className="badge bg-primary">{post?.total_views ?? 0}</span></td>
+                                                                    </tr>
+                                                                </tbody>
+                                                            </table>
+                                                            {/* Likes: <span className="badge bg-primary">{post?.total_likes ?? 0}</span> <br />
+                                                            Comments: <span className="badge bg-primary">{post?.total_comments ?? 0}</span> <br />
+                                                            Views: <span className="badge bg-primary">{post?.total_views ?? 0}</span> */}
                                                         </td>
 
                                                         <td>{post.created_at_formatted}</td>
@@ -211,105 +242,39 @@ export default function PostIndex({ posts, filters }: Props) {
 
                                     </table>
 
+
+
                                     <div className="d-flex justify-content-between align-items-center p-3">
+
                                         <div>
-                                            Showing {posts.data.length} of {posts?.total} records
+                                            Showing {posts.from} - {posts.to} of {posts.total} records
                                         </div>
 
-                                        <div className="d-flex justify-content-center mt-4">
-                                            <ul className="pagination">
+                                        <div className="d-flex justify-content-end mt-3">
+                                            <ul className="pagination mb-0">
 
-                                                {/* Previous */}
-                                                <li className={`page-item ${posts.current_page === 1 ? 'disabled' : ''}`}>
-                                                    <button
-                                                        className="page-link"
-                                                        onClick={() =>
-                                                            router.get(
-                                                                window.location.pathname,
-                                                                {
-                                                                    ...filters,
-                                                                    page: posts.current_page - 1,
-                                                                },
-                                                                {
-                                                                    preserveState: true,
-                                                                    preserveScroll: true,
-                                                                }
-                                                            )
-                                                        }
+                                                {posts.links.map((link, index) => (
+                                                    <li
+                                                        key={index}
+                                                        className={`page-item ${link.active ? "active" : ""
+                                                            } ${!link.url ? "disabled" : ""}`}
                                                     >
-                                                        Previous
-                                                    </button>
-                                                </li>
-
-                                                {Array.from({ length: posts.last_page }, (_, i) => i + 1)
-                                                    .filter(
-                                                        page =>
-                                                            page === 1 ||
-                                                            page === posts.last_page ||
-                                                            Math.abs(page - posts.current_page) <= 2
-                                                    )
-                                                    .map((page, index, pages) => {
-                                                        const prevPage = pages[index - 1];
-
-                                                        return (
-                                                            <React.Fragment key={page}>
-                                                                {prevPage && page - prevPage > 1 && (
-                                                                    <li className="page-item disabled">
-                                                                        <span className="page-link">...</span>
-                                                                    </li>
-                                                                )}
-
-                                                                <li
-                                                                    className={`page-item ${posts.current_page === page ? 'active' : ''
-                                                                        }`}
-                                                                >
-                                                                    <button
-                                                                        className="page-link"
-                                                                        onClick={() =>
-                                                                            router.get(
-                                                                                window.location.pathname,
-                                                                                {
-                                                                                    ...filters,
-                                                                                    page,
-                                                                                },
-                                                                                {
-                                                                                    preserveState: true,
-                                                                                    preserveScroll: true,
-                                                                                }
-                                                                            )
-                                                                        }
-                                                                    >
-                                                                        {page}
-                                                                    </button>
-                                                                </li>
-                                                            </React.Fragment>
-                                                        );
-                                                    })}
-
-                                                {/* Next */}
-                                                <li
-                                                    className={`page-item ${posts.current_page === posts.last_page ? 'disabled' : ''
-                                                        }`}
-                                                >
-                                                    <button
-                                                        className="page-link"
-                                                        onClick={() =>
-                                                            router.get(
-                                                                window.location.pathname,
-                                                                {
-                                                                    ...filters,
-                                                                    page: posts.current_page + 1,
-                                                                },
-                                                                {
-                                                                    preserveState: true,
-                                                                    preserveScroll: true,
+                                                        <button
+                                                            className="page-link"
+                                                            dangerouslySetInnerHTML={{ __html: link.label }}
+                                                            disabled={!link.url}
+                                                            onClick={() => {
+                                                                if (link.url) {
+                                                                    router.visit(link.url, {
+                                                                        preserveState: true,
+                                                                        preserveScroll: true,
+                                                                    });
                                                                 }
-                                                            )
-                                                        }
-                                                    >
-                                                        Next
-                                                    </button>
-                                                </li>
+                                                            }}
+                                                        />
+                                                    </li>
+                                                ))}
+
                                             </ul>
                                         </div>
                                     </div>

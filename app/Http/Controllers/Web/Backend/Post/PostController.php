@@ -16,7 +16,12 @@ class PostController extends Controller
      */
     public function index(Request $request)
     {
-        $query = Post::with('user');
+        $query = Post::with([
+            'user',
+            "likes",
+            "comments",
+            "views",
+        ]);
 
         if ($request->filled('publisher')) {
             $query->whereHas('user', function ($q) use ($request) {
@@ -38,6 +43,10 @@ class PostController extends Controller
             ->paginate($request->items ?? 15)
             ->through(function ($post) {
                 $post->created_at_formatted = $post->created_at->format('d M Y, h:i A');
+                $post->total_likes = $post->likes->count();
+                $post->total_comments = $post->comments->count();
+                $post->total_views = $post->views->count();
+                $post->image = $post->images[0];
                 return $post;
             })
             ->withQueryString();
