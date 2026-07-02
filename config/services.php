@@ -52,7 +52,12 @@ return [
     ],
 
     'serpapi' => [
-    'key' => env('SERPAPI_KEY'),
-],
+        'key' => env('SERPAPI_KEY'),
+    ],
+
+    'elevenlabs' => [
+        'api_key' => env('ELEVENLABS_API_KEY'),
+        'voice_id' => env('ELEVENLABS_VOICE_ID', '21m00Tcm4TlvDq8ikWAM'), // Default: Rachel
+    ],
 
 ];

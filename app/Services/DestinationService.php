@@ -14,7 +14,7 @@ class DestinationService
         protected DestinationRepository $destinationRepository
     ) {}
 
-    public function list($request = null, float $lat, float $lng)
+    public function list($request = null, float $lat, float $lng, $items = 100)
     {
         $savedPlaceIds = auth()->check()
             ? UserDestination::where('user_id', auth()->id())
@@ -23,11 +23,11 @@ class DestinationService
             : [];
 
         $search = $request['search'] ?? 'tourist attractions';
-        $items  = min((int)($request['items'] ?? 20), 100);
+        $limit  = min((int)($items ?? 20), 100);
 
         $results = [];
 
-        for ($start = 0; $start < $items; $start += 20) {
+        for ($start = 0; $start < $limit; $start += 20) {
 
             $response = Http::get('https://serpapi.com/search.json', [
                 'engine'  => 'google_maps',
@@ -179,55 +179,55 @@ class DestinationService
         //     ]
         // )->json();
         $response = Http::get('https://serpapi.com/search.json', [
-    'engine'  => 'google_maps',
-    'type'    => 'place',
-    'place_id'=> $placeId,
-    'api_key' => config('services.serpapi.key'),
-])->json();
+            'engine'  => 'google_maps',
+            'type'    => 'place',
+            'place_id'=> $placeId,
+            'api_key' => config('services.serpapi.key'),
+        ])->json();
 
         $place = $response['result'] ?? [];
 
-        $photo = null;
+        // $photo = null;
 
-        if (!empty($place['photos'][0]['photo_reference'])) {
-            $photo =
-                "https://maps.googleapis.com/maps/api/place/photo"
-                . "?maxwidth=1200"
-                . "&photo_reference={$place['photos'][0]['photo_reference']}"
-                . "&key=" . config('services.google.places_api_key');
-        }
+        // if (!empty($place['photos'][0]['photo_reference'])) {
+        //     $photo =
+        //         "https://maps.googleapis.com/maps/api/place/photo"
+        //         . "?maxwidth=1200"
+        //         . "&photo_reference={$place['photos'][0]['photo_reference']}"
+        //         . "&key=" . config('services.google.places_api_key');
+        // }
 
-$place = $response['place_results'] ?? [];
+        $place = $response['place_results'] ?? [];
 
-return [
+        return [
 
-    'place_id' => $place['place_id'] ?? '',
+            'place_id' => $place['place_id'] ?? '',
 
-    'name' => $place['title'] ?? '',
+            'name' => $place['title'] ?? '',
 
-    'description' => $place['description'] ?? ($place['address'] ?? ''),
+            'description' => $place['description'] ?? ($place['address'] ?? ''),
 
-    'image' => $place['thumbnail'] ?? null,
+            'image' => $place['thumbnail'] ?? null,
 
-    'rating' => (string)($place['rating'] ?? '0'),
+            'rating' => (string)($place['rating'] ?? '0'),
 
-    'address' => $place['address'] ?? '',
+            'address' => $place['address'] ?? '',
 
-    'phone' => $place['phone'] ?? '',
+            'phone' => $place['phone'] ?? '',
 
-    'website' => $place['website'] ?? '',
+            'website' => $place['website'] ?? '',
 
-    'latitude' => $place['gps_coordinates']['latitude'] ?? null,
+            'latitude' => $place['gps_coordinates']['latitude'] ?? null,
 
-    'longitude' => $place['gps_coordinates']['longitude'] ?? null,
+            'longitude' => $place['gps_coordinates']['longitude'] ?? null,
 
-    'cost_of_living' => '',
-    'visa' => '',
-    'food' => '',
-    'culture' => '',
-    'transport' => '',
-    'safety' => '',
-];
+            'cost_of_living' => '',
+            'visa' => '',
+            'food' => '',
+            'culture' => '',
+            'transport' => '',
+            'safety' => '',
+        ];
         // return [
         //     'place_id' => $place['place_id'] ?? null,
         //     'name' => $place['name'] ?? '',

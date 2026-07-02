@@ -10,5 +10,6 @@ Route::controller(AiConciergeController::class)
         Route::get('conversations', 'index');
         Route::get('conversations/{conversation}', 'show');
         Route::post('chat', 'chat');
+        Route::post('voice-chat', 'voiceChat');
         Route::delete('conversations/delete/{conversation}', 'destroy');
     });

@@ -112,4 +112,70 @@ class AiConciergeController extends Controller
 
         return $this->successResponse('Conversation deleted');
     }
+
+    /**
+     * Send a voice message to the AI concierge.
+     */
+    public function voiceChat(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'audio' => 'required|file|mimes:mp3,wav,m4a,webm,ogg,mp4,mpga,x-m4a|max:10240', // 10MB max
+            'conversation_id' => 'nullable|integer|exists:ai_conversations,id',
+        ]);
+
+        if ($validator->fails()) {
+            return $this->errorResponse('Validation failed', 422, $validator->errors());
+        }
+
+        $user = $request->user();
+        $validated = $validator->validated();
+
+        try {
+            // 1. Transcribe the uploaded audio
+            $audioFile = $request->file('audio');
+            $userText = $this->service->transcribeAudio(
+                $audioFile->getPathname(), 
+                $audioFile->getClientOriginalName()
+            );
+
+            if (empty($userText)) {
+                return $this->errorResponse('Could not transcribe audio', 400);
+            }
+
+            // 2. Get or create conversation
+            if (!empty($validated['conversation_id'])) {
+                $conversation = AiConversation::where('id', $validated['conversation_id'])
+                    ->where('user_id', $user->id)
+                    ->first();
+
+                if (!$conversation) {
+                    return $this->errorResponse('Conversation not found', 404);
+                }
+            } else {
+                $conversation = AiConversation::create([
+                    'user_id' => $user->id,
+                ]);
+            }
+
+            // 3. Get AI text response
+            $assistantMessage = $this->service->chat($conversation, $userText);
+
+            // 4. Convert AI text response to speech
+            $audioUrl = $this->service->textToSpeech($assistantMessage->content);
+
+            return $this->successResponse('Voice message processed', [
+                'conversation_id' => $conversation->id,
+                'conversation_title' => $conversation->fresh()->title,
+                'user_message' => $userText,
+                'ai_message' => $assistantMessage,
+                'ai_audio_url' => $audioUrl,
+            ]);
+
+        } catch (\Exception $e) {
+            return $this->errorResponse(
+                'Failed to process voice chat: ' . $e->getMessage(),
+                500
+            );
+        }
+    }
 }

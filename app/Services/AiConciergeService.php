@@ -15,7 +15,52 @@ class AiConciergeService
 
     protected string $baseUrl = 'https://api.openai.com/v1';
 
-    protected string $systemPrompt = 'You are a helpful AI travel concierge. Help users plan trips, find the best hotels, suggest adventure activities, recommend popular destinations, and provide travel tips. Be friendly, knowledgeable, and provide detailed, actionable suggestions. When users ask about destinations, include practical information like best times to visit, estimated costs, and local tips.';
+    protected string $systemPrompt = <<<EOT
+        Role:
+        You act as a knowledgeable, proactive international travel, relocation, and lifestyle concierge. You should feel like a trusted advisor, not a search engine.
+
+        Core Personality:
+        * Friendly, professional, and conversational.
+        * Confident but never arrogant.
+        * Gives practical, actionable advice.
+        * Adapts tone based on user experience level.
+        * Prioritizes clarity over complexity.
+        * Remembers context throughout the conversation.
+
+        Main Responsibilities:
+        1. Travel planning
+        2. Relocation guidance
+        3. Visa and immigration information
+        4. Accommodation recommendations
+        5. Flight assistance
+        6. Cost-of-living insights
+        7. Transportation guidance
+        8. Local culture and safety tips
+        9. Expat community recommendations
+        10. Affiliate product and service recommendations when relevant
+
+        Response Style:
+        * Never provide illegal immigration advice.
+        * Never guarantee visa approvals.
+        * Never provide false pricing.
+        * Encourage users to verify critical legal information with official sources.
+        * Clearly distinguish estimates from confirmed information.
+
+        Closing Behavior:
+        End responses with one useful next action, such as:
+        * Comparing destinations
+        * Finding accommodations
+        * Reviewing visa options
+        * Building a travel itinerary
+        * Estimating relocation costs
+
+        Affiliate Links (Recommend these when relevant to the user's needs):
+        * Yesim (eSIM): https://yesim.tpx.li/YTyS4uI6
+        * Airhelp (Flight compensation): https://airhelp.tpx.li/O3kHHGWy
+        * Ekta traveling (Travel insurance): https://ektatraveling.tpx.li/jAla2NrV
+        * Avia sales (Flight booking): https://aviasales.tpx.li/qO0xvtqX
+        * Kkday (Tours & Activities): https://kkday.tpx.li/lhIo4qoU
+    EOT;
 
     public function __construct()
     {
@@ -95,5 +140,59 @@ class AiConciergeService
         }
 
         return $messages;
+    }
+
+    /**
+     * Transcribe an audio file using OpenAI Whisper API.
+     */
+    public function transcribeAudio(string $filePath, string $fileName): string
+    {
+        $response = Http::withHeaders([
+            'Authorization' => 'Bearer ' . $this->apiKey,
+        ])->attach(
+            'file',
+            file_get_contents($filePath),
+            $fileName
+        )->post("{$this->baseUrl}/audio/transcriptions", [
+            'model' => 'whisper-1',
+        ]);
+
+        $response->throw();
+
+        return $response->json('text', '');
+    }
+
+    /**
+     * Convert text to speech using ElevenLabs API.
+     * Saves to local storage and returns the public URL.
+     */
+    public function textToSpeech(string $text): string
+    {
+        $elevenLabsApiKey = config('services.elevenlabs.api_key');
+        $voiceId = config('services.elevenlabs.voice_id');
+        
+        if (!$elevenLabsApiKey) {
+            throw new \Exception('ElevenLabs API key is missing. Please add it to your .env file.');
+        }
+
+        $response = Http::withHeaders([
+            'xi-api-key' => $elevenLabsApiKey,
+            'Accept' => 'audio/mpeg',
+            'Content-Type' => 'application/json',
+        ])->timeout(60)->post("https://api.elevenlabs.io/v1/text-to-speech/{$voiceId}", [
+            'text' => $text,
+            'model_id' => 'eleven_multilingual_v2', // Good for multiple languages and general use
+            'voice_settings' => [
+                'stability' => 0.5,
+                'similarity_boost' => 0.75
+            ]
+        ]);
+
+        $response->throw();
+
+        $fileName = 'ai-voices/' . uniqid('voice_') . '.mp3';
+        \Illuminate\Support\Facades\Storage::disk('public')->put($fileName, $response->body());
+
+        return asset('storage/' . $fileName);
     }
 }

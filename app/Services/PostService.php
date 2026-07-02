@@ -36,8 +36,9 @@ class PostService
         $data['slug'] = $slug;
 
         if (!empty($data['images'])) {
+
             foreach ($data['images'] as $image) {
-                $fileName = time() . '.' . $image->getClientOriginalExtension();
+                $fileName = Str::uuid() . '.' . $image->getClientOriginalExtension();
                 $path = $image->storeAs('post/image', $fileName, 'public');
 
                 $images[] = 'storage/' . $path;
@@ -47,7 +48,7 @@ class PostService
 
         if (!empty($data['audios'])) {
             foreach ($data['audios'] as $audio) {
-                $fileName = time() . '.' . $audio->getClientOriginalExtension();
+                $fileName = Str::uuid() . '.' . $audio->getClientOriginalExtension();
                 $path = $audio->storeAs('post/audio', $fileName, 'public');
                 $audios[] = 'storage/' . $path;
             }
@@ -56,7 +57,7 @@ class PostService
 
         if (!empty($data['videos'])) {
             foreach ($data['videos'] as $video) {
-                $fileName = time() . '.' . $video->getClientOriginalExtension();
+                $fileName = Str::uuid() . '.' . $video->getClientOriginalExtension();   
                 $path = $video->storeAs('post/video', $fileName, 'public');
                 $videos[] = 'storage/' . $path;
             }
