@@ -34,7 +34,8 @@ interface Message {
     sender: User;
 }
 
-const limitWords = (text: string, limit: number) => {
+const limitWords = (text: string | null | undefined, limit: number) => {
+    if (!text) return "";
     const words = text.split(" ");
 
     if (words.length <= limit) return text;

@@ -24,7 +24,8 @@ class DestinationController extends Controller
             'data' => $this->destinationService->list(
                 $request->all(),
                 $request->lat,
-                $request->lng
+                $request->lng,
+                $request->items,
             ),
         ]);
     }

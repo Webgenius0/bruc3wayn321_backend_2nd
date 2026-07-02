@@ -157,6 +157,7 @@ export default function PostIndex({ posts, filters }: Props) {
                                                     <tr key={post.id}>
                                                         <td>{post.id}</td>
                                                         <td>
+                                                            {post.image ? (
                                                                 <img
                                                                     src={`/${post.image}`}
                                                                     alt="Post"
@@ -164,6 +165,14 @@ export default function PostIndex({ posts, filters }: Props) {
                                                                     height={60}
                                                                     style={{ objectFit: "cover", borderRadius: "6px" }}
                                                                 />
+                                                            ) : (
+                                                                <div 
+                                                                    style={{ width: 60, height: 60, backgroundColor: "#eee", borderRadius: "6px" }} 
+                                                                    className="d-flex align-items-center justify-content-center text-muted fs-12"
+                                                                >
+                                                                    No Image
+                                                                </div>
+                                                            )}
                                                         </td>
                                                         <td>
                                                             {post.content?.length > 80
@@ -171,7 +180,7 @@ export default function PostIndex({ posts, filters }: Props) {
                                                                 : post.content}
                                                         </td>
                                                         <td>
-                                                            {post.user.first_name} {post.user.last_name}
+                                                            {post?.user?.first_name} {post?.user?.last_name}
                                                         </td>
                                                         <td>
                                                             <table>
@@ -247,13 +256,13 @@ export default function PostIndex({ posts, filters }: Props) {
                                     <div className="d-flex justify-content-between align-items-center p-3">
 
                                         <div>
-                                            Showing {posts.from} - {posts.to} of {posts.total} records
+                                            Showing {posts?.from ?? 0} - {posts?.to ?? 0} of {posts?.total ?? 0} records
                                         </div>
 
                                         <div className="d-flex justify-content-end mt-3">
                                             <ul className="pagination mb-0">
 
-                                                {posts.links.map((link, index) => (
+                                                {posts?.links?.map((link, index) => (
                                                     <li
                                                         key={index}
                                                         className={`page-item ${link.active ? "active" : ""

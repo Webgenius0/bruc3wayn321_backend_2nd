@@ -129,8 +129,6 @@ class PostController extends Controller
      */
     public function store(PostStoreRequest $request)
     {
-        \Log::info($request->all());
-        dd($request->all());
         $post = $this->service->create($request->validated());
 
         return $this->successResponse('Post create successfully', new PostResource($post));
