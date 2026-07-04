@@ -60,4 +60,13 @@ return [
         'voice_id' => env('ELEVENLABS_VOICE_ID', '21m00Tcm4TlvDq8ikWAM'), // Default: Rachel
     ],
 
+    'google_vision' => [
+        'api_key' => env('GOOGLE_VISION_API_KEY'),
+        'url' => 'https://vision.googleapis.com/v1/images:annotate',
+    ],
+
+    'google_translate' => [
+        'api_key' => env('GOOGLE_TRANSLATE_API_KEY'),
+        'url' => 'https://translation.googleapis.com/language/translate/v2',
+    ],
 ];

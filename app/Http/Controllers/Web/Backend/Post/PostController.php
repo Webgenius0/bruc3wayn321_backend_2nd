@@ -46,7 +46,7 @@ class PostController extends Controller
                 $post->total_likes = $post->likes->count();
                 $post->total_comments = $post->comments->count();
                 $post->total_views = $post->views->count();
-                $post->image = $post->images[0];
+                $post->image = $post->images[0] ?? '';
                 return $post;
             })
             ->withQueryString();
@@ -123,6 +123,11 @@ class PostController extends Controller
             "views",
             "user",
         ]);
+
+        $post['likes_count'] = $post->likes()->count();
+        $post['comments_count'] = $post->comments()->count();
+        $post['views_count'] = $post->views()->count();
+
         return Inertia::render('backend/posts/show', ['post' => $post]);
     }
 
@@ -154,40 +159,49 @@ class PostController extends Controller
             'location' => ['nullable'],
             'latitude' => ['nullable', 'numeric'],
             'longitude' => ['nullable', 'numeric'],
+
+            'existing_images' => ['nullable', 'array'],
+            'existing_images.*' => ['string'],
+            'existing_audios' => ['nullable', 'array'],
+            'existing_audios.*' => ['string'],
+            'existing_videos' => ['nullable', 'array'],
+            'existing_videos.*' => ['string'],
+
             // File arrays
             'images' => ['nullable', 'array'],
             'images.*' => ['image', 'max:2048'],
             'audios' => ['nullable', 'array'],
-            'audios.*' => ['file', 'mimetypes:audio/mpeg,audio/mp3,audio/wav'],
+            'audios.*' => ['file', 'mimetypes:audio/mpeg,audio/mp3,audio/wav,audio/mp4,audio/x-m4a,video/mp4'],
             'videos' => ['nullable', 'array'],
-            'videos.*' => ['file', 'mimetypes:video/mp4,video/quicktime,video/x-msvideo'],
+            'videos.*' => ['file', 'mimetypes:video/mp4,video/quicktime,video/x-msvideo,video/webm'],
             'is_draft' => ['required', 'boolean'],
             'is_published' => ['required', 'boolean'],
         ]);
 
+        $finalImages = $request->input('existing_images', []);
+        $finalAudios = $request->input('existing_audios', []);
+        $finalVideos = $request->input('existing_videos', []);
+
         // Handle file uploads for update (append new files)
         if ($request->hasFile('images')) {
-            $imagePaths = [];
             foreach ($request->file('images') as $image) {
-                $imagePaths[] = $image->store('posts/images', 'public');
+                $finalImages[] = 'storage/' . $image->store('posts/images', 'public');
             }
-            // Merge with existing images if any
-            $validated['images'] = array_merge($post->images ?? [], $imagePaths);
         }
         if ($request->hasFile('audios')) {
-            $audioPaths = [];
             foreach ($request->file('audios') as $audio) {
-                $audioPaths[] = $audio->store('posts/audios', 'public');
+                $finalAudios[] = 'storage/' . $audio->store('posts/audios', 'public');
             }
-            $validated['audios'] = array_merge($post->audios ?? [], $audioPaths);
         }
         if ($request->hasFile('videos')) {
-            $videoPaths = [];
             foreach ($request->file('videos') as $video) {
-                $videoPaths[] = $video->store('posts/videos', 'public');
+                $finalVideos[] = 'storage/' . $video->store('posts/videos', 'public');
             }
-            $validated['videos'] = array_merge($post->videos ?? [], $videoPaths);
         }
+
+        $validated['images'] = $finalImages;
+        $validated['audios'] = $finalAudios;
+        $validated['videos'] = $finalVideos;
 
         $post->update($validated);
 

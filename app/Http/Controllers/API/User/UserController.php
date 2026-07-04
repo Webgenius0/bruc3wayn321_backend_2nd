@@ -7,6 +7,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\UpdatePassword;
 use App\Http\Requests\UserUpdateRequest;
 use App\Models\User;
+use App\Models\UserBlock;
 use App\Services\Auth\AuthService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -300,12 +301,30 @@ class UserController extends Controller
     public function userDetails($id)
     {
         $user = User::find($id);
+        $authUser = Auth::user();
 
         $isFollowing = auth()->user()->isFollowing($user);
 
-        $user['is_followed'] = $isFollowing;
+        $otherUser = $user;
 
-        // dd($user);
+        $iBlockedThem = false;
+        $theyBlockedMe = false;
+
+        if ($otherUser) {
+            $iBlockedThem = UserBlock::where([
+                'user_id' => $authUser->id,
+                'blocked_user_id' => $otherUser->id,
+            ])->exists();
+
+            $theyBlockedMe = UserBlock::where([
+                'user_id' => $otherUser->id,
+                'blocked_user_id' => $authUser->id,
+            ])->exists();
+        }
+        $user['is_followed'] = $isFollowing;
+        $user['i_blocked_them'] = $iBlockedThem;
+        $user['they_blocked_me'] = $theyBlockedMe;
+        $user['can_send_message'] = !($iBlockedThem || $theyBlockedMe);
 
         if (!$user) {
             return $this->errorResponse('User not found', 404);

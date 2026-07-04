@@ -63,16 +63,15 @@ class CurrencyController extends Controller
             $validated['amount']
         );
 
-        // dd($result)
+        // dd($result);
 
         $data = [
             'from_currency' => $validated['from_currency'],
             'to_currency' => $validated['to_currency'],
             'rate' => $result['rate'],
-            'input_amount' => $validated['amount'],
-            'converted_amount' => $result['amount']
+            'input_amount' => $result['original_amount'],
+            'converted_amount' => $result['converted_amount']
         ];
-
 
         return $this->successResponse('Successfully converted', $data);
     }

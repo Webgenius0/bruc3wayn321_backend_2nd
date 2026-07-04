@@ -294,7 +294,7 @@ export default function Messages({ chats, selectedChat, messages }: Props) {
 
                                                 <div className="flex-grow-1 ms-10">
                                                     <div>
-                                                        <p className="mb-0" style={{fontSize: "14px"}}>{msg.sender.first_name} {msg.sender.last_name}</p>
+                                                        <p className="mb-0" style={{ fontSize: "14px" }}>{msg.sender.first_name} {msg.sender.last_name}</p>
                                                         <p
                                                             className="lh-1-8 bg-light fs-16 d-inline-block"
                                                             style={{
@@ -317,7 +317,7 @@ export default function Messages({ chats, selectedChat, messages }: Props) {
                                 })}
                             </ul>
                         </div>
-                        
+
                     </div>
                 ) : (
                     <div className="card bg-white rounded-10 border border-white mb-4 d-flex align-items-center justify-content-center" style={{ height: "100%" }}>
