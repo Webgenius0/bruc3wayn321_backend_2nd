@@ -69,7 +69,7 @@ class CurrencyController extends Controller
             'from_currency' => $validated['from_currency'],
             'to_currency' => $validated['to_currency'],
             'rate' => $result['rate'],
-            'input_amount' => $result['original_amount'],
+            'input_amount' => (string) $result['original_amount'],
             'converted_amount' => $result['converted_amount']
         ];
 
