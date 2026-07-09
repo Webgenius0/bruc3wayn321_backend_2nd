@@ -37,7 +37,7 @@ class DestinationService
                     'query' => $request['search'] ?? 'popular places',
                     'tourist attractions, landmarks, parks, museums, beaches, viewpoints, historical places, hotels, resorts, restaurants, cafes, local food, shopping malls, markets, entertainment, theme parks, zoos, aquariums, cultural centers, art galleries',
                     'location' => "{$lat},{$lng}",
-                    'radius' => 50000,
+                    'radius' => 5000,
                     'key' => config('services.google.places_api_key'),
                 ]
             )->json();
@@ -128,9 +128,7 @@ class DestinationService
                 'key' => config('services.google.places_api_key'),
             ]
         )->json();
-
         $place = $response['result'] ?? [];
-
         $photo = null;
 
         if (!empty($place['photos'][0]['photo_reference'])) {
@@ -140,9 +138,6 @@ class DestinationService
                 . "&photo_reference={$place['photos'][0]['photo_reference']}"
                 . "&key=" . config('services.google.places_api_key');
         }
-
-        // $weather = $this->openweather->currentByCoordinates($place['geometry']['location']['lat'], $place['geometry']['location']['lng']);
-        // dd($place);
 
         return [
             'place_id' => $place['place_id'] ?? null,
