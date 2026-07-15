@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\API\Message\ChatApiController;
 use App\Http\Controllers\API\Notification\FirebaseTokenController;
 use App\Services\FCMService;
 use App\Services\OpenWeatherService;
@@ -34,3 +35,27 @@ Route::prefix('v1')->group(function () {
 
 
 Route::middleware('auth:sanctum')->get('/test-push', [FirebaseTokenController::class, 'test']);
+
+
+
+// Chat routes below were provided by twopoint0/reverb-chat (package removed).
+// Uncomment when a chat package is re-integrated.
+// Route::prefix('api/chat')->middleware(['api', 'auth:sanctum'])->group(function () {
+//     Route::post('open-group', [ChatApiController::class, 'openOrCreate']);
+//     Route::post('{chat}/message', [ChatApiController::class, 'sendByChat']);
+//     Route::post('user/{user}/message', [ChatApiController::class, 'sendByUser']);
+//     Route::get('messages/{id}', [ChatApiController::class, 'messagelist']);
+//     Route::get('messages/user/{id}', [ChatApiController::class, 'usermessagelist']);
+//     Route::get('/list', [ChatApiController::class, 'chatList']);
+// });
+
+
+// chat message controller 
+Route::prefix('chat')->controller(ChatApiController::class)->group(function () {
+    Route::post('/open-group', 'openOrCreate');
+    Route::post('{chat}/message', 'sendByChat');
+    Route::post('user/{user}/message', 'sendByUser');
+    Route::get('messages/{id}', 'messagelist');
+    Route::get('messages/user/{id}', 'usermessagelist');
+    Route::get('/list', 'chatList');
+});

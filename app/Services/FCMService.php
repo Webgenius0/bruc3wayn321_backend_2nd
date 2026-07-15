@@ -16,13 +16,17 @@ class FCMService
 
     public function sendMessage($token, $title, $body, $data = [])
     {
+        // Firebase MessageData requires ALL values to be strings.
+        // Cast every value here so callers never need to worry about types.
+        $safeData = array_map(fn($v) => (string) $v, $data);
+
         $message = [
             'token' => $token,
             'notification' => [
                 'title' => $title,
-                'body' => $body,
+                'body'  => $body,
             ],
-            'data' => array_merge($data, [
+            'data' => array_merge($safeData, [
                 'click_action' => 'FLUTTER_NOTIFICATION_CLICK',
             ]),
         ];

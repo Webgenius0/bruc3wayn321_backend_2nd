@@ -4,24 +4,28 @@ namespace App\Listeners;
 
 use App\Models\User;
 use App\Notifications\NewMessageReceived;
-use Illuminate\Support\Facades\Notification;
-use Twopoint0\ReverbChat\Events\SendMessage;
 
 class MessageSentListener
 {
-    public function handle(SendMessage $event): void
+    /**
+     * Handle the event.
+     *
+     * The chat package (twopoint0/reverb-chat) was removed.
+     * This listener is preserved but inactive until a chat package is re-integrated.
+     * To re-enable, re-add the package and register this listener in AppServiceProvider.
+     */
+    public function handle(object $event): void
     {
-        $message = $event->message;
-        if (!$message) {
+        if (!isset($event->message) || !$event->message) {
             return;
         }
 
-        $chat = $message->chat;
+        $message = $event->message;
+        $chat = $message->chat ?? null;
         if (!$chat) {
             return;
         }
 
-        // Get sender
         $sender = User::find($message->sender_id);
         if (!$sender) {
             return;

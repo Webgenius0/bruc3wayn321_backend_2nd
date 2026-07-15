@@ -37,10 +37,6 @@ class AppServiceProvider extends ServiceProvider
             $event->extendSocialite('apple', \SocialiteProviders\Apple\Provider::class);
         });
 
-        Event::listen(
-            \Twopoint0\ReverbChat\Events\SendMessage::class,
-            \App\Listeners\MessageSentListener::class
-        );
         /**
          * Bootstrap any application services.
          */

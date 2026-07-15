@@ -84,6 +84,9 @@ return [
     ],
 
     'firebase' => [
-        'credentials_file' => public_path('storage/firebase/credentials.json'),
+        'credentials_file' => env(
+            'FIREBASE_CREDENTIALS_FILE',
+            storage_path('app/public/firebase/rnrapp-76020-firebase-adminsdk-fbsvc-964eb06e93.json')
+        ),
     ],
 ];

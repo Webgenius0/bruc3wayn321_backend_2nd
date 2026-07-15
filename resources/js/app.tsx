@@ -6,6 +6,11 @@ import AuthLayout from '@/layouts/auth-layout';
 import SettingsLayout from '@/layouts/settings/layout';
 import MainLayout from './layouts/main-layout';
 import 'react-quill-new/dist/quill.snow.css';
+import { configureEcho } from '@laravel/echo-react';
+
+configureEcho({
+    broadcaster: 'reverb',
+});
 
 const appName = import.meta.env.VITE_APP_NAME || 'bruc3wayn321';
 

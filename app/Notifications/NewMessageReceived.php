@@ -8,14 +8,13 @@ use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Notification;
 use Illuminate\Support\Facades\Log;
-use Twopoint0\ReverbChat\Models\ChatMessage;
 
 class NewMessageReceived extends Notification
 {
     use Queueable;
 
     public function __construct(
-        protected ChatMessage $chatMessage,
+        protected object $chatMessage,
         protected User $sender
     ) {}
 
@@ -28,7 +27,7 @@ class NewMessageReceived extends Notification
                     $this->getTitle(),
                     $this->getMessage(),
                     [
-                        'chat_id' => $this->chatMessage->chat_id,
+                        'chat_id'    => $this->chatMessage->chat_id,
                         'message_id' => $this->chatMessage->id,
                     ]
                 );
