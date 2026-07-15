@@ -31,4 +31,18 @@ trait ApiResponse
             'errors'  => $errors,
         ], $status);
     }
+
+
+    protected function validationError(
+        string $message = 'Something went wrong',
+        int $status = 400,
+        mixed $errors = []
+    ): JsonResponse {
+        return response()->json([
+            'success' => false,
+            'code' => $status,
+            'message' => $message,
+            'errors'  => $errors,
+        ], $status);
+    }
 }

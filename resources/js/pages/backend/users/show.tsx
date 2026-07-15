@@ -21,12 +21,7 @@ export default function Show({
 
             {/* Profile Card */}
             <div className="col-lg-4">
-
-
-
-
                 <div className="card bg-white p-20 rounded-10 border border-white mb-4">
-
                     <div className="text-center" style={{
                         display: "flex",
                         justifyContent: "center",
@@ -46,7 +41,7 @@ export default function Show({
                         />
 
                         <h3 className="mb-1">
-                            {user.name}
+                            {user.first_name}  {user.last_name}
                         </h3>
 
                         <p className="text-muted mb-3">
@@ -106,11 +101,23 @@ export default function Show({
                         <div className="col-md-6 mb-4">
 
                             <label className="label fs-14 text-muted mb-2">
-                                Full Name
+                                First Name
                             </label>
 
                             <div className="form-control bg-light">
-                                {user.name}
+                                {user.first_name}
+                            </div>
+
+                        </div>
+                        {/* Name */}
+                        <div className="col-md-6 mb-4">
+
+                            <label className="label fs-14 text-muted mb-2">
+                                Last Name
+                            </label>
+
+                            <div className="form-control bg-light">
+                                {user.last_name}
                             </div>
 
                         </div>

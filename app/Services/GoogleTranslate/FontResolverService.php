@@ -82,18 +82,15 @@ class FontResolverService
             'NotoSans-Regular.ttf',
         };
 
-
         $path = public_path(
             "fonts/{$font}"
         );
-
 
         if (! file_exists($path)) {
             throw new RuntimeException(
                 "Font not found: {$path}"
             );
         }
-
 
         return $path;
     }

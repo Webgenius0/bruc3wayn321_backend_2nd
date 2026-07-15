@@ -69,4 +69,16 @@ return [
         'api_key' => env('GOOGLE_TRANSLATE_API_KEY'),
         'url' => 'https://translation.googleapis.com/language/translate/v2',
     ],
+
+    'google' => [
+        'client_id' => env('GOOGLE_CLIENT_ID'),
+        'client_secret' => env('GOOGLE_CLIENT_SECRET'),
+        'redirect' => 'http://google.com/callback-url',
+    ],
+
+    'apple' => [
+        'client_id' => env('APPLE_CLIENT_ID'),
+        'client_secret' => env('APPLE_CLIENT_SECRET'),
+        'redirect' => 'http://apple.com/callback-url',
+    ],
 ];

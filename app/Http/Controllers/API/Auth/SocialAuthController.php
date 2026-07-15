@@ -1,0 +1,81 @@
+<?php
+
+namespace App\Http\Controllers\API\Auth;
+
+use App\Concerns\ApiResponse;
+use App\Http\Controllers\Controller;
+use App\Models\User;
+use Illuminate\Http\Request;
+use Illuminate\Support\Str;
+use Laravel\Socialite\Socialite;
+
+class SocialAuthController extends Controller
+{
+    use ApiResponse;
+    public function socialLogin(Request $request)
+    {
+        $request->validate([
+            'provider' => 'required',
+            'token' => 'required',
+        ]);
+
+        try {
+            $socialUser = Socialite::driver($request->provider)->stateless()->userFromToken($request->token);
+
+            $raw = method_exists($socialUser, 'getRaw')
+                ? $socialUser->getRaw()
+                : $socialUser->user;
+
+            $firstName = $raw['given_name']
+                ?? $raw['first_name']
+                ?? explode(' ', $socialUser->getName(), 2)[0]
+                ?? '';
+
+            $lastName = $raw['family_name']
+                ?? $raw['last_name']
+                ?? (count(explode(' ', $socialUser->getName(), 2)) > 1
+                    ? explode(' ', $socialUser->getName(), 2)[1]
+                    : '');
+
+            // dd($firstName, $lastName);
+
+            // Check if user exists
+            $user = User::where('email', $socialUser->getEmail())->first();
+
+            if (!$user) {
+                // Create if not exists
+                $user = User::create([
+                    'social_id' => $socialUser->getId(),
+                    'provider' => $request->provider,
+                    // "given_name" => "Saifuddin"
+                    // "family_name" => "Nobab"
+                    'first_name'      => $firstName,
+                    'last_name'      => $lastName,
+                    'email'     => $socialUser->getEmail(),
+                    'role'     => 'user',
+                    'avatar'    => $socialUser->getAvatar(),
+                    'password'  => bcrypt(Str::random(32)),
+                ]);
+            } else {
+                // Update Google info if already exists
+                $user->update([
+                    'social_id' => $socialUser->getId(),
+                    'avatar'    => $socialUser->getAvatar(),
+                ]);
+            }
+
+            $token = $user->createToken('auth_token')->plainTextToken;
+
+            return $this->successResponse("Login Successfull", [
+                "token" => $token,
+                "user" => $user,
+            ], 201);
+        } catch (\Exception $e) {
+            return response()->json([
+                'status'  => false,
+                'message' => 'Authentication failed',
+                'error'   => $e->getMessage(),
+            ], 500);
+        }
+    }
+}

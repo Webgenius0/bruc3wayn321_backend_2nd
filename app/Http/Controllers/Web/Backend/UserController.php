@@ -29,7 +29,8 @@ class UserController extends Controller
 
                 $query->where(function ($q) use ($search) {
 
-                    $q->where('name', 'like', "%{$search}%")
+                    $q->where('first_name', 'like', "%{$search}%")
+                        ->orWhere('last_name', 'like', "%{$search}%")
                         ->orWhere('email', 'like', "%{$search}%");
                 });
             })
@@ -62,7 +63,8 @@ class UserController extends Controller
     public function store(Request $request)
     {
         $validated = $request->validate([
-            'name' => ['required'],
+            'first_name' => ['required'],
+            'last_name' => ['required'],
             'email' => ['required', 'email', 'unique:users,email'],
             'password' => ['required', 'min:6'],
             'avatar' => ['nullable'],
@@ -104,7 +106,6 @@ class UserController extends Controller
         $validated = $request->validate([
             'first_name' => ['required'],
             'last_name' => ['required'],
-
             'email' => [
                 'required',
                 'email',

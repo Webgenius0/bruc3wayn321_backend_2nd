@@ -71,6 +71,7 @@ class AiConciergeService
     /**
      * Send a message in a conversation and get the AI response.
      */
+
     public function chat(AiConversation $conversation, string $userMessage): AiMessage
     {
         // Save the user's message
@@ -170,7 +171,7 @@ class AiConciergeService
     {
         $elevenLabsApiKey = config('services.elevenlabs.api_key');
         $voiceId = config('services.elevenlabs.voice_id');
-        
+
         if (!$elevenLabsApiKey) {
             throw new \Exception('ElevenLabs API key is missing. Please add it to your .env file.');
         }
