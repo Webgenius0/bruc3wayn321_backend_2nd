@@ -23,6 +23,7 @@ class FirebaseTokenController extends Controller
             return $this->errorResponse($validator->errors()->first(), 422, $validator->errors());
         }
 
+
         $user = auth()->user();
 
         $token = $request->token;
