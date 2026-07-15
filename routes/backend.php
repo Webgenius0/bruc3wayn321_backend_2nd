@@ -11,11 +11,13 @@ use App\Http\Controllers\Web\Backend\ProfileController;
 use App\Http\Controllers\Web\Backend\QueueController;
 use App\Http\Controllers\Web\Backend\SystemSettingsController;
 use App\Http\Controllers\Web\Backend\UserController;
+use App\Http\Controllers\Web\Backend\NotificationController;
 use Illuminate\Support\Facades\Route;
 
 Route::middleware(['auth:sanctum', 'admin'])->prefix('admin')->group(function () {
 
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('admin.dashboard.index');
+    Route::get('/notifications', [NotificationController::class, 'index'])->name('admin.notifications.index');
 
     // User APIs controller 
     Route::get('/users', [UserController::class, 'index'])->name('admin.user.index');

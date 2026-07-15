@@ -57,7 +57,7 @@ class PostService
 
         if (!empty($data['videos'])) {
             foreach ($data['videos'] as $video) {
-                $fileName = Str::uuid() . '.' . $video->getClientOriginalExtension();   
+                $fileName = Str::uuid() . '.' . $video->getClientOriginalExtension();
                 $path = $video->storeAs('post/video', $fileName, 'public');
                 $videos[] = 'storage/' . $path;
             }
@@ -166,6 +166,17 @@ class PostService
         $post->likes()->create([
             'user_id' => $userId,
         ]);
+
+        // dd($post->user_id, $userId);
+
+        if ($post->user_id !== $userId) {
+            try {
+
+                $post->user->notify(new \App\Notifications\PostLiked($post, auth()->user()));
+            } catch (\Throwable $e) {
+                \Log::error("Failed to notify user: " . $e->getMessage());
+            }
+        }
 
         return [
             'liked' => true,

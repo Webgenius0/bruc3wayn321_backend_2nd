@@ -153,7 +153,7 @@ export default function PostIndex({ posts, filters }: Props) {
                                         <tbody>
                                             {posts?.data?.length > 0 ? (
                                                 posts.data.map((post: Post) => (
-// console.log(post.images),
+                                                    // console.log(post.images),
                                                     <tr key={post.id}>
                                                         <td>{post.id}</td>
                                                         <td>
@@ -166,8 +166,8 @@ export default function PostIndex({ posts, filters }: Props) {
                                                                     style={{ objectFit: "cover", borderRadius: "6px" }}
                                                                 />
                                                             ) : (
-                                                                <div 
-                                                                    style={{ width: 60, height: 60, backgroundColor: "#eee", borderRadius: "6px" }} 
+                                                                <div
+                                                                    style={{ width: 60, height: 60, backgroundColor: "#eee", borderRadius: "6px" }}
                                                                     className="d-flex align-items-center justify-content-center text-muted fs-12"
                                                                 >
                                                                     No Image

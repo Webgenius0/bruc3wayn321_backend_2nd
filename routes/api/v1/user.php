@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\API\User\UserController;
 use App\Http\Controllers\API\User\UserBlockReportController;
+use App\Http\Controllers\API\Notification\NotificationApiController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -42,3 +43,8 @@ Route::controller(UserBlockReportController::class)
         // Report
         Route::post('{userId}/report', 'report');
     });
+
+Route::controller(NotificationApiController::class)->middleware('auth:sanctum')->group(function () {
+    Route::get('notifications', 'list');
+    Route::get('notifications/unread-counts', 'unreadCounts');
+});

@@ -5,6 +5,7 @@ namespace App\Http\Controllers\API\Notification;
 use App\Concerns\ApiResponse;
 use App\Http\Controllers\Controller;
 use App\Models\FirebaseToken;
+use App\Services\FCMService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Validator;
 
@@ -15,7 +16,7 @@ class FirebaseTokenController extends Controller
     public function updateFirebaseToken(Request $request)
     {
         $validator = Validator::make($request->all(), [
-            'token' => 'required|unique:firebase_tokens',
+            'token' => 'required',
             'device_id' => 'required',
         ]);
 
@@ -68,5 +69,29 @@ class FirebaseTokenController extends Controller
         } else {
             return $this->errorResponse('Token not found', 404);
         }
+    }
+
+    public function test()
+    {
+        $tokens = FirebaseToken::where('user_id', auth()->id())
+            ->pluck('token');
+
+        $fcmService = app(FCMService::class);
+
+        foreach ($tokens as $token) {
+            try {
+                $fcmService->sendMessage(
+                    $token,
+                    'Test Push',
+                    'Success'
+                );
+            } catch (\Throwable $e) {
+                // Log and continue with the next token
+                \Log::warning("Failed to send notification to {$token}: {$e->getMessage()}");
+            }
+        }
+
+        
+        return "Success";
     }
 }

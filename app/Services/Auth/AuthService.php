@@ -219,6 +219,12 @@ class AuthService
 
         $user = $this->repository->update($user, $data);
 
+        try {
+            $user->notify(new \App\Notifications\ProfileUpdated());
+        } catch (\Throwable $e) {
+            \Log::error("Failed to notify user on profile update: " . $e->getMessage());
+        }
+
         return $this->successResponse(
             'Profile updated successfully',
             $user

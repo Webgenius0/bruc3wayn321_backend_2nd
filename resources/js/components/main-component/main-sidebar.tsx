@@ -37,6 +37,12 @@ const items: MenuItem[] = [
         icon_name: 'message',
         icon: 'material-symbols-outlined menu-icon',
     },
+    {
+        title: 'Notifications',
+        href: '/admin/notifications',
+        icon_name: 'bell',
+        icon: 'material-symbols-outlined menu-icon',
+    },
 
 
     {

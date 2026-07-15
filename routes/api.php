@@ -1,5 +1,7 @@
 <?php
 
+use App\Http\Controllers\API\Notification\FirebaseTokenController;
+use App\Services\FCMService;
 use App\Services\OpenWeatherService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
@@ -28,3 +30,7 @@ Route::prefix('v1')->group(function () {
     require base_path('routes/api/v1/ai-concierge.php');
     require base_path('routes/api/v1/translate.php');
 });
+
+
+
+Route::middleware('auth:sanctum')->get('/test-push', [FirebaseTokenController::class, 'test']);

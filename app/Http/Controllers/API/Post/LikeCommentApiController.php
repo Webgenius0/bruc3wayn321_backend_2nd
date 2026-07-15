@@ -23,9 +23,17 @@ class LikeCommentApiController extends Controller
 
     public function like(Post $post)
     {
-        $post->likes()->firstOrCreate([
+        $like = $post->likes()->firstOrCreate([
             'user_id' => auth()->id(),
         ]);
+
+        if ($like->wasRecentlyCreated && $post->user_id !== auth()->id()) {
+            try {
+                $post->user->notify(new \App\Notifications\PostLiked($post, auth()->user()));
+            } catch (\Throwable $e) {
+                \Log::error("Failed to notify user on like: " . $e->getMessage());
+            }
+        }
 
         return $this->successResponse('Post liked.');
     }
@@ -42,10 +50,18 @@ class LikeCommentApiController extends Controller
             return $this->errorResponse($validate->errors()->first(), 422);
         }
 
-        $post->comments()->create([
+        $comment = $post->comments()->create([
             'user_id' => auth()->id(),
             'comment' => $request->comment,
         ]);
+
+        if ($post->user_id !== auth()->id()) {
+            try {
+                $post->user->notify(new \App\Notifications\PostCommented($post, auth()->user(), $comment->comment));
+            } catch (\Throwable $e) {
+                \Log::error("Failed to notify user on comment: " . $e->getMessage());
+            }
+        }
 
         return $this->successResponse(
             'Comment added.'

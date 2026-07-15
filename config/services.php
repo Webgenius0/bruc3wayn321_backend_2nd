@@ -42,9 +42,9 @@ return [
     'openweather' => [
         'api_key' => env('OPENWEATHER_API_KEY'),
     ],
-    'google' => [
-        'places_api_key' => env('GOOGLE_PLACES_API_KEY'),
-    ],
+    // 'google' => [
+    //     'places_api_key' => env('GOOGLE_PLACES_API_KEY'),
+    // ],
 
     'openai' => [
         'api_key' => env('OPENAI_API_KEY'),
@@ -71,6 +71,7 @@ return [
     ],
 
     'google' => [
+        'places_api_key' => env('GOOGLE_PLACES_API_KEY'),
         'client_id' => env('GOOGLE_CLIENT_ID'),
         'client_secret' => env('GOOGLE_CLIENT_SECRET'),
         'redirect' => 'http://google.com/callback-url',
@@ -80,5 +81,9 @@ return [
         'client_id' => env('APPLE_CLIENT_ID'),
         'client_secret' => env('APPLE_CLIENT_SECRET'),
         'redirect' => 'http://apple.com/callback-url',
+    ],
+
+    'firebase' => [
+        'credentials_file' => public_path('storage/firebase/credentials.json'),
     ],
 ];

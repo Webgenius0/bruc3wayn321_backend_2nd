@@ -42,14 +42,18 @@ class SocialAuthController extends Controller
             $user = User::where('email', $socialUser->getEmail())->first();
 
             if (!$user) {
-                // Create if not exists
+                do {
+                    $userName = Str::slug(
+                        $firstName . $lastName,
+                        ''
+                    ) . rand(1000, 9999);
+                } while (User::where('user_name', $userName)->exists());
                 $user = User::create([
                     'social_id' => $socialUser->getId(),
                     'provider' => $request->provider,
-                    // "given_name" => "Saifuddin"
-                    // "family_name" => "Nobab"
                     'first_name'      => $firstName,
                     'last_name'      => $lastName,
+                    'user_name'      => $userName,
                     'email'     => $socialUser->getEmail(),
                     'role'     => 'user',
                     'avatar'    => $socialUser->getAvatar(),

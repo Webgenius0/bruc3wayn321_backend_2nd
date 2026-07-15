@@ -22,7 +22,7 @@ class DestinationService
             ->toArray()
             : [];
 
-        // dd($request);
+        // dd(config('services.google'));
         $search = $request['search'] ?? 'tourist attractions';
         $limit  = min((int)($items ?? 20), 100);
 
