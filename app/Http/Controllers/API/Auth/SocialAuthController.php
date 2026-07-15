@@ -38,8 +38,6 @@ class SocialAuthController extends Controller
                     ? explode(' ', $socialUser->getName(), 2)[1]
                     : '');
 
-            // dd($firstName, $lastName);
-
             // Check if user exists
             $user = User::where('email', $socialUser->getEmail())->first();
 
@@ -65,17 +63,22 @@ class SocialAuthController extends Controller
                 ]);
             }
 
-            $token = $user->createToken('auth_token')->plainTextToken;
+            $loginUser = User::find($user->id);
+
+            $token = $loginUser->createToken('auth_token')->plainTextToken;
 
             return $this->successResponse("Login Successfull", [
                 "token" => $token,
-                "user" => $user,
-            ], 201);
+                "user" => $loginUser,
+            ], 200);
         } catch (\Exception $e) {
             return response()->json([
-                'status'  => false,
-                'message' => 'Authentication failed',
-                'error'   => $e->getMessage(),
+                'success' => false,
+                'code' => 500,
+                'message' => config('app.debug')
+                    ? $e->getMessage()
+                    : 'Something went wrong.',
+                'errors' => [],
             ], 500);
         }
     }

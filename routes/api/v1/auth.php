@@ -18,7 +18,7 @@ Route::controller(AuthApiController::class)->prefix('auth')->middleware('throttl
     Route::post('change-password', 'resetPassword');
 });
 
-Route::controller(FirebaseTokenController::class)->group(function () {
+Route::controller(FirebaseTokenController::class)->middleware('auth:sanctum')->group(function () {
     Route::post('/firebase-token/add', 'updateFirebaseToken');
     Route::delete('/firebase-token/delete', 'deleteFirebaseToken');
 });

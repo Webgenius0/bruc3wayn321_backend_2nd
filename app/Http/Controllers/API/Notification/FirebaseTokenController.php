@@ -19,15 +19,16 @@ class FirebaseTokenController extends Controller
             'device_id' => 'required',
         ]);
 
+
         if ($validator->fails()) {
             return $this->errorResponse($validator->errors()->first(), 422, $validator->errors());
         }
-
 
         $user = auth()->user();
 
         $token = $request->token;
         $device_id = $request->device_id;
+
 
         $firebaseToken = FirebaseToken::where('device_id', $device_id)->where('user_id', $user->id)->first();
 
