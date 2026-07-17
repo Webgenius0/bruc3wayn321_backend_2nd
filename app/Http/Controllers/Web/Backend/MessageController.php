@@ -5,7 +5,7 @@ namespace App\Http\Controllers\Web\Backend;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
-use Twopoint0\ReverbChat\Models\Chat;
+use App\Models\Chat;
 
 class MessageController extends Controller
 {

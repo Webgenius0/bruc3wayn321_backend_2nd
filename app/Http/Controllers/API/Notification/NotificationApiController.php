@@ -5,7 +5,7 @@ namespace App\Http\Controllers\API\Notification;
 use App\Concerns\ApiResponse;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
-use Twopoint0\ReverbChat\Models\ChatMessage;
+use App\Models\ChatMessage;
 
 class NotificationApiController extends Controller
 {
@@ -17,9 +17,9 @@ class NotificationApiController extends Controller
     public function list()
     {
         $user = auth()->user();
-        
+
         $notifications = $user->notifications()->paginate(15);
-        
+
         // Mark all as read when list is visited
         $user->unreadNotifications->markAsRead();
 

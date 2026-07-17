@@ -1,5 +1,6 @@
 <?php
 
+// use App\Http\Controllers\API\ChatApiController;
 use App\Http\Controllers\API\Message\ChatApiController;
 use App\Http\Controllers\API\Notification\FirebaseTokenController;
 use App\Services\FCMService;
@@ -51,7 +52,7 @@ Route::middleware('auth:sanctum')->get('/test-push', [FirebaseTokenController::c
 
 
 // chat message controller 
-Route::prefix('chat')->controller(ChatApiController::class)->group(function () {
+Route::prefix('chat')->controller(ChatApiController::class)->middleware('auth:sanctum')->group(function () {
     Route::post('/open-group', 'openOrCreate');
     Route::post('{chat}/message', 'sendByChat');
     Route::post('user/{user}/message', 'sendByUser');

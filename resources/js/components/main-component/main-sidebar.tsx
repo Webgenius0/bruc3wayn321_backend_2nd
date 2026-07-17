@@ -40,7 +40,7 @@ const items: MenuItem[] = [
     {
         title: 'Notifications',
         href: '/admin/notifications',
-        icon_name: 'bell',
+        icon_name: 'Notifications',
         icon: 'material-symbols-outlined menu-icon',
     },
 

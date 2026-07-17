@@ -2,31 +2,20 @@
 
 namespace App\Http\Controllers\API\Message;
 
-use App\Events\MessageCount;
-use App\Events\SendMessage;
-use App\Helpers\Helper;
-use App\Http\Controllers\Controller;
-use App\Models\Chat;
-use App\Models\ChatMessage;
-use App\Models\Connection;
-use App\Models\FirebaseToken;
-use App\Services\FCMService;
+use Carbon\Carbon;
+use Illuminate\Routing\Controller;
 use Illuminate\Http\Request;
-use Illuminate\Mail\Events\MessageSent;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
 
+use App\Models\UserBlock;
+use App\Models\Chat;
+use App\Models\ChatMessage;
+use App\Events\SendMessage;
+use App\Helpers\Helper as Helper;
+
 class ChatApiController extends Controller
 {
-
-    protected $push;
-
-    public function __construct(FCMService $push)
-    {
-        $this->push = $push;
-    }
-
-
     public function openOrCreate(Request $request)
     {
         $request->validate([
@@ -34,38 +23,15 @@ class ChatApiController extends Controller
             'items'   => 'nullable|integer|min:1|max:100',
         ]);
 
-        $authId     = auth()->id();
+        $authId = auth()->id();
         $targetUser = $request->user_id;
-        $perPage    = $request->items ?? 20;
-
-        /*
-        |--------------------------------------------------------------------------
-        | Check connection from both sides
-        |--------------------------------------------------------------------------
-        */
-
-        $connected = Connection::where(function ($q) use ($authId, $targetUser) {
-            $q->where('user_id', $authId)
-                ->where('connected_user_id', $targetUser);
-        })->orWhere(function ($q) use ($authId, $targetUser) {
-            $q->where('user_id', $targetUser)
-                ->where('connected_user_id', $authId);
-        })->exists();
-
-        if (! $connected) {
-            return Helper::error('Users are not connected.', 403);
-        }
+        $perPage = $request->items ?? 20;
 
         DB::beginTransaction();
 
         try {
 
-            /*
-            |--------------------------------------------------------------------------
-            | Check existing private chat
-            |--------------------------------------------------------------------------
-            */
-
+            // Check existing private chat
             $chat = Chat::where('is_group', false)
                 ->whereHas('users', fn($q) => $q->where('user_id', $authId))
                 ->whereHas('users', fn($q) => $q->where('user_id', $targetUser))
@@ -73,38 +39,22 @@ class ChatApiController extends Controller
                 ->having('users_count', 2)
                 ->first();
 
-            /*
-            |--------------------------------------------------------------------------
-            | Create chat if not exists
-            |--------------------------------------------------------------------------
-            */
-
+            // Create chat if not exists
             if (!$chat) {
-
                 $chat = Chat::create([
                     'is_group'   => false,
                     'created_by' => $authId,
                 ]);
 
                 $chat->users()->attach([
-                    $authId => [
-                        'joined_at' => now()
-                    ],
-
-                    $targetUser => [
-                        'joined_at' => now()
-                    ],
+                    $authId => ['joined_at' => now()],
+                    $targetUser => ['joined_at' => now()],
                 ]);
             }
 
             DB::commit();
 
-            /*
-            |--------------------------------------------------------------------------
-            | Get messages
-            |--------------------------------------------------------------------------
-            */
-
+            // Get messages ONLY (latest first)
             $messages = ChatMessage::where('chat_id', $chat->id)
                 ->with([
                     'sender',
@@ -114,13 +64,11 @@ class ChatApiController extends Controller
                 ->paginate($perPage);
 
             return Helper::successData([
-                'chat'     => $chat,
+                'chat'  => $chat,
                 'messages' => $messages,
             ], 200);
         } catch (\Exception $e) {
-
             DB::rollBack();
-
             return response()->json([
                 'error' => $e->getMessage()
             ], 500);
@@ -131,12 +79,30 @@ class ChatApiController extends Controller
     /* ---------------------------------------------------
      | 1️⃣ Send message using CHAT ID
      ---------------------------------------------------*/
-
     public function sendByChat(Request $request, Chat $chat)
     {
-        // 🔐 Must be chat member
+        // Must be chat member
         if (!$chat->users()->where('user_id', auth()->id())->exists()) {
             return response()->json(['error' => 'Unauthorized'], 403);
+        }
+
+        // Check if the other user has blocked auth user or auth user blocked them
+        $authId     = auth()->id();
+        $otherUser  = $chat->users()->where('user_id', '!=', $authId)->first();
+
+        if ($otherUser) {
+            $isBlocked = UserBlock::where(function ($q) use ($authId, $otherUser) {
+                $q->where('user_id', $authId)->where('blocked_user_id', $otherUser->id);
+            })->orWhere(function ($q) use ($authId, $otherUser) {
+                $q->where('user_id', $otherUser->id)->where('blocked_user_id', $authId);
+            })->exists();
+
+            if ($isBlocked) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'You cannot send messages to this user.',
+                ], 403);
+            }
         }
 
         return $this->sendMessage($request, $chat);
@@ -150,7 +116,21 @@ class ChatApiController extends Controller
         $authId = auth()->id();
 
         if ($authId == $userId) {
-            return Helper::success('Cannot message yourself', 422);
+            return Helper::successData('Cannot message yourself', 422);
+        }
+
+        // Block check — prevent sending if either side has blocked
+        $isBlocked = UserBlock::where(function ($q) use ($authId, $userId) {
+            $q->where('user_id', $authId)->where('blocked_user_id', $userId);
+        })->orWhere(function ($q) use ($authId, $userId) {
+            $q->where('user_id', $userId)->where('blocked_user_id', $authId);
+        })->exists();
+
+        if ($isBlocked) {
+            return response()->json([
+                'success' => false,
+                'message' => 'You cannot send messages to this user.',
+            ], 403);
         }
 
         // Find existing private chat
@@ -172,8 +152,8 @@ class ChatApiController extends Controller
                 ]);
 
                 $chat->users()->attach([
-                    $authId => ['joined_at' => now()],
-                    $userId => ['joined_at' => now()],
+                    $authId  => ['joined_at' => now()],
+                    $userId  => ['joined_at' => now()],
                 ]);
 
                 DB::commit();
@@ -187,7 +167,7 @@ class ChatApiController extends Controller
     }
 
     /* ---------------------------------------------------
-     | Shared send logic
+     | 🔁 Shared send logic
      ---------------------------------------------------*/
     private function sendMessage(Request $request, Chat $chat)
     {
@@ -196,23 +176,69 @@ class ChatApiController extends Controller
             'files.*' => 'file|max:20480',
         ]);
 
+
         if ($validate->fails()) {
-            return Helper::validation($validate->errors()->first(), $validate->errors());
+            return Helper::validation($validate->errors());
         }
 
+        $links = [];
 
-        // Check if this is the first message
-        $isFirstMessage = !$chat->messages()->exists();
+        preg_match_all('/https?:\/\/[^\s]+/i', $request->message, $matches);
+
+        foreach ($matches[0] ?? [] as $url) {
+
+            $title = null;
+            $description = null;
+            $thumbnail = null;
+
+            try {
+                $html = file_get_contents($url);
+
+                preg_match('/<title>(.*?)<\/title>/si', $html, $titleMatch);
+                $title = $titleMatch[1] ?? null;
+
+                preg_match(
+                    '/<meta[^>]+property=["\']og:description["\'][^>]+content=["\']([^"\']+)/i',
+                    $html,
+                    $descMatch
+                );
+                $description = $descMatch[1] ?? null;
+
+                preg_match(
+                    '/<meta[^>]+property=["\']og:image["\'][^>]+content=["\']([^"\']+)/i',
+                    $html,
+                    $imageMatch
+                );
+                $thumbnail = $imageMatch[1] ?? null;
+            } catch (\Exception $e) {
+            }
+
+            $links[] = [
+                'url' => $url,
+                'title' => $title,
+                'description' => $description,
+                'thumbnail' => $thumbnail,
+            ];
+        }
+
+        // dd($request->all());
 
         $message = ChatMessage::create([
             'chat_id'   => $chat->id,
             'sender_id' => auth()->id(),
             'message'   => $request->message,
+            'links' => !empty($links)
+                ? json_encode($links)
+                : null,
             'type'      => $request->hasFile('files') ? 'files' : 'text',
         ]);
 
+
+
         if ($request->hasFile('files')) {
+            // dd($request->all());
             foreach ($request->file('files') as $file) {
+
                 $path = $file->store('chat/attachments', 'public');
 
                 $filePath = 'storage/' . $path;
@@ -228,50 +254,9 @@ class ChatApiController extends Controller
 
         $message->load('attachments');
 
+        // dd($message);
+
         SendMessage::dispatch($message, $message->chat_id ?? $message['chat_id']);
-        MessageCount::dispatch(5);
-
-        /*
-        |--------------------------------------------------------------------------
-        | Send Push Notification
-        |--------------------------------------------------------------------------
-        */
-
-        // Receiver user
-        $receiver = $chat->users()
-            ->where('user_id', '!=', auth()->id())
-            ->first();
-
-        if ($receiver) {
-
-            // Inactive check (example: offline more than 5 minutes)
-            $isInactive = !$receiver->is_online ||
-                optional($receiver->last_seen_at)->lt(now()->subMinutes(5));
-
-            if ($isFirstMessage || $isInactive) {
-
-                $tokens = FirebaseToken::where('user_id', $receiver->id)->get();
-
-                foreach ($tokens as $token) {
-
-                    if (!empty($token->token)) {
-
-                        $this->push->sendMessage(
-                            $token->token,
-                            auth()->user()->first_name,
-                            $request->message ?? 'Sent an attachment',
-                            [
-                                'type'      => 'chat',
-                                'chat_id'   => (string) $chat->id,
-                                'message_id' => (string) $message->id,
-                                'sender_id' => (string) auth()->id(),
-                            ]
-                        );
-                    }
-                }
-            }
-        }
-
 
         return Helper::successData($message, 'message send successfully');
     }
@@ -291,16 +276,6 @@ class ChatApiController extends Controller
         }
 
 
-        $authId = auth()->id();
-
-        // Mark messages as read
-        $message = ChatMessage::where('chat_id', $chat->id)
-            ->where('sender_id', '!=', $authId)
-            ->where('is_read', 0)
-            ->update([
-                'is_read' => 1
-            ]);
-
         $messages = ChatMessage::where('chat_id', $chat->id)
             ->with([
                 'sender',
@@ -308,6 +283,34 @@ class ChatApiController extends Controller
             ])
             ->orderByDesc('created_at')
             ->paginate($perPage);
+
+
+
+        $authUser = auth()->user();
+
+        // Other participant (for private chat)
+        $otherUser = $chat->users
+            ->where('id', '!=', $authUser->id)
+            ->first();
+
+        $iBlockedThem = false;
+        $theyBlockedMe = false;
+
+        if ($otherUser) {
+            $iBlockedThem = UserBlock::where([
+                'user_id' => $authUser->id,
+                'blocked_user_id' => $otherUser->id,
+            ])->exists();
+
+            $theyBlockedMe = UserBlock::where([
+                'user_id' => $otherUser->id,
+                'blocked_user_id' => $authUser->id,
+            ])->exists();
+        }
+
+        $chat['i_blocked_them'] = $iBlockedThem;
+        $chat['they_blocked_me'] = $theyBlockedMe;
+        $chat['can_send_message'] = !($iBlockedThem || $theyBlockedMe);
 
         return Helper::successData([
             'chat'  => $chat,
@@ -323,19 +326,15 @@ class ChatApiController extends Controller
             $q->where('user_id', $authId);
         })
             ->with([
-                'users:id,name,avatar',
+                'users:id,first_name,last_name,avatar',
+
                 // latest message only
                 'messages' => function ($q) {
                     $q->latest()->limit(1);
                 },
-                'messages.sender:id,name,avatar',
-                'messages.attachments',
-            ])
-            ->withCount([
-                'messages as unread_count' => function ($q) use ($authId) {
-                    $q->where('sender_id', '!=', $authId)
-                        ->where('is_read', 0);
-                }
+
+                'messages.sender:id,first_name,last_name,avatar',
+                'messages',
             ])
 
             // order by last message OR fallback to chat created_at
@@ -350,7 +349,10 @@ class ChatApiController extends Controller
             ->get();
 
         $data = [];
-        $total = 0;
+
+        // Pre-fetch all block relationships for auth user in one query
+        $blockedByMe   = UserBlock::where('user_id', $authId)->pluck('blocked_user_id')->toArray();
+        $blockedByOther = UserBlock::where('blocked_user_id', $authId)->pluck('user_id')->toArray();
 
         foreach ($chats as $chat) {
 
@@ -360,35 +362,50 @@ class ChatApiController extends Controller
             // get last message safely
             $lastMessage = $chat->messages->first();
 
+            // check block status
+            $otherUserId      = $otherUser ? $otherUser->id : null;
+            $iBlockedThem     = $otherUserId && in_array($otherUserId, $blockedByMe);
+            $theyBlockedMe    = $otherUserId && in_array($otherUserId, $blockedByOther);
+            $isBlocked        = $iBlockedThem || $theyBlockedMe;
+
             $data[] = [
-                'chat_id' => $chat->id,
-                'unread_count' => $chat->unread_count,
-                'user' => $otherUser,
+                'chat_id'          => $chat->id,
+                'user'             => $otherUser,
+                'is_blocked'       => $isBlocked,
+                'i_blocked_them'   => $iBlockedThem,
+                'they_blocked_me'  => $theyBlockedMe,
+                'can_send_message' => !$isBlocked,
                 'last_message' => $lastMessage ? [
-                    'id' => $lastMessage->id,
-                    'chat_id' => $lastMessage->chat_id,
-                    'sender_id' => $lastMessage->sender_id,
-                    'message' => $lastMessage->message,
-                    'type' => $lastMessage->type,
-                    'is_read' => $lastMessage->is_read,
-                    'created_at' => $lastMessage->created_at,
-                    'updated_at' => $lastMessage->updated_at,
+                    'id'         => $lastMessage->id,
+                    'chat_id'    => $lastMessage->chat_id,
+                    'sender_id'  => $lastMessage->sender_id,
+                    'message'    => $lastMessage->message,
+                    'type'       => $lastMessage->type,
+                    'is_read'    => $lastMessage->is_read,
+                    'created_at' => Carbon::parse($lastMessage->created_at)->format('h:i A'),
+                    'updated_at' => Carbon::parse($lastMessage->updated_at)->format('h:i A'),
 
                     'sender' => $lastMessage->sender,
-                    'attachments' => $lastMessage->attachments,
-                ] : null,
-            ];
+                    // 'attachments' => $lastMessage->attachments,
+                ] : [
+                    'id'        => 0,
+                    'chat_id'   => $chat->id,
+                    'sender_id' => 0,
+                    'message'   => 'No message',
+                    'type'      => 'text',
+                    'is_read'   => 0,
 
-            $total += $chat->unread_count;
+                    'sender' => '{
+                        "id": 0,
+                        "name": "",
+                        "avatar": ""
+                    }',
+                    // 'attachments' => [],
+                ],
+            ];
         }
 
-        $items = [
-            'unread' => $total,
-            'data' => $data,
-        ];
-
-
-        return Helper::successData($items, 'Chat List', 200);
+        return Helper::successData($data, 'Chat List', 200);
     }
 
     public function usermessagelist(Request $request, $userId)
@@ -398,7 +415,6 @@ class ChatApiController extends Controller
         ]);
 
         $authId = auth()->id();
-
         $perPage = $request->items ?? 20;
 
         // Find private chat between users
@@ -413,6 +429,32 @@ class ChatApiController extends Controller
             return Helper::error('Chat not found', 404);
         }
 
+        $authUser = auth()->user();
+
+        // Other participant (for private chat)
+        $otherUser = $chat->users
+            ->where('id', '!=', $authUser->id)
+            ->first();
+
+        $iBlockedThem = false;
+        $theyBlockedMe = false;
+
+        if ($otherUser) {
+            $iBlockedThem = UserBlock::where([
+                'user_id' => $authUser->id,
+                'blocked_user_id' => $otherUser->id,
+            ])->exists();
+
+            $theyBlockedMe = UserBlock::where([
+                'user_id' => $otherUser->id,
+                'blocked_user_id' => $authUser->id,
+            ])->exists();
+        }
+
+        $chat['i_blocked_them'] = $iBlockedThem;
+        $chat['they_blocked_me'] = $theyBlockedMe;
+        $chat['can_send_message'] = !($iBlockedThem || $theyBlockedMe);
+
         // Get messages
         $messages = ChatMessage::where('chat_id', $chat->id)
             ->with([
@@ -421,16 +463,6 @@ class ChatApiController extends Controller
             ])
             ->orderByDesc('created_at')
             ->paginate($perPage);
-
-        // Mark messages as read
-        $message = ChatMessage::where('chat_id', $chat->id)
-            ->where('sender_id', '!=', $authId)
-            ->where('is_read', 0)
-            ->update([
-                'is_read' => 1
-            ]);
-
-
 
         return Helper::successData([
             'chat' => $chat,

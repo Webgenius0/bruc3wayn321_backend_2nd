@@ -15,8 +15,8 @@ use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\Rule;
-use Twopoint0\ReverbChat\Models\Chat;
-use Twopoint0\ReverbChat\Models\ChatMessageAttachment;
+use App\Models\Chat;
+use App\Models\ChatMessageAttachment;
 
 class UserController extends Controller
 {

@@ -14,14 +14,25 @@ class NotificationController extends Controller
     public function index(Request $request)
     {
         $user = $request->user();
-        
-        $notifications = $user->notifications()->paginate(15);
-        
+
+        $query = $user->notifications();
+
+        if ($request->filled('date')) {
+            $query->whereDate('created_at', $request->date);
+        }
+
+        $perPage = $request->input('per_page', 5);
+        $notifications = $query->paginate($perPage)->withQueryString();
+
         // Mark all notifications as read when visiting the list
         $user->unreadNotifications->markAsRead();
 
         return Inertia::render('backend/notifications/index', [
             'notifications' => $notifications,
+            'filters' => [
+                'date' => $request->date,
+                'per_page' => $perPage,
+            ],
         ]);
     }
 }
