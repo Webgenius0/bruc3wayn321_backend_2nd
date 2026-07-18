@@ -38,6 +38,12 @@ const items: MenuItem[] = [
         icon: 'material-symbols-outlined menu-icon',
     },
     {
+        title: 'Report',
+        href: '/admin/reports',
+        icon_name: 'message',
+        icon: 'material-symbols-outlined menu-icon',
+    },
+    {
         title: 'Notifications',
         href: '/admin/notifications',
         icon_name: 'Notifications',

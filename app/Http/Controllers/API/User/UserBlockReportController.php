@@ -18,23 +18,18 @@ class UserBlockReportController extends Controller
     /**
      * Block a user
      */
+
     public function block(Request $request, $userId)
     {
         $authUser = Auth::user();
-
         if ($authUser->id == $userId) {
             return $this->errorResponse('You cannot block yourself', 422);
         }
-
         $targetUser = User::find($userId);
         if (!$targetUser) {
             return $this->errorResponse('User not found', 404);
         }
-
-        $alreadyBlocked = UserBlock::where('user_id', $authUser->id)
-            ->where('blocked_user_id', $userId)
-            ->exists();
-
+        $alreadyBlocked = UserBlock::where('user_id', $authUser->id)->where('blocked_user_id', $userId)->exists();
         if ($alreadyBlocked) {
             return $this->errorResponse('User is already blocked', 409);
         }

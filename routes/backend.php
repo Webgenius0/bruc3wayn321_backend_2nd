@@ -12,6 +12,7 @@ use App\Http\Controllers\Web\Backend\QueueController;
 use App\Http\Controllers\Web\Backend\SystemSettingsController;
 use App\Http\Controllers\Web\Backend\UserController;
 use App\Http\Controllers\Web\Backend\NotificationController;
+use App\Http\Controllers\Web\Backend\UserBlockReportAdminController;
 use Illuminate\Support\Facades\Route;
 
 Route::middleware(['auth:sanctum', 'admin'])->prefix('admin')->group(function () {
@@ -28,7 +29,6 @@ Route::middleware(['auth:sanctum', 'admin'])->prefix('admin')->group(function ()
     Route::put('/users/{id}', [UserController::class, 'update'])->name('admin.users.update');
     Route::delete('/users/{user}', [UserController::class, 'destroy'])->name('admin.users.destroy');
 
-
     // Post CRUD routes
     Route::get('/posts', [PostController::class, 'index'])->name('admin.posts.index');
     Route::get('/post/show/{post:slug}', [PostController::class, 'show'])->name('admin.posts.show');
@@ -42,17 +42,14 @@ Route::middleware(['auth:sanctum', 'admin'])->prefix('admin')->group(function ()
     Route::delete('/posts/{post}', [PostController::class, 'destroy'])->name('admin.posts.destroy');
     Route::get('users/{user}/sessions', [UserController::class, 'sessions'])->name('admin.users.sessions');
 
-
     // System setting here 
     Route::get('/settings/system', [SystemSettingsController::class, 'index'])->name('admin.settings.system.index');
     Route::post('/settings/system/update', [SystemSettingsController::class, 'update'])->name('admin.settings.system.update');
-
 
     Route::get('/settings/smtp', [SystemSettingsController::class, 'smtp'])->name('admin.settings.smtp');
     Route::post('/settings/smtp/update', [SystemSettingsController::class, 'updateSmtp'])->name('admin.settings.smtp.update');
     Route::get('/settings/stripe', [SystemSettingsController::class, 'stripe'])->name('admin.settings.stripe');
     Route::post('/settings/stripe/update', [SystemSettingsController::class, 'updateStripe'])->name('admin.settings.stripe.update');
-
 
     //profile routes and controller
     Route::get('/profile', [ProfileController::class, 'index'])->name('admin.profile.index');
@@ -80,6 +77,8 @@ Route::middleware(['auth:sanctum', 'admin'])->prefix('admin')->group(function ()
     Route::post('/failed-jobs/{id}/retry', [QueueController::class, 'retry'])->name('admin.failed-jobs.retry');
     Route::delete('/failed-jobs/{id}', [QueueController::class, 'destroy'])->name('admin.failed-jobs.destroy');
 
-
     Route::get('/messages', [MessageController::class, 'index'])->name('admin.message.index');
+
+
+    Route::get('/reports', [UserBlockReportAdminController::class, 'Reportindex'])->name('admin.report.index');
 });

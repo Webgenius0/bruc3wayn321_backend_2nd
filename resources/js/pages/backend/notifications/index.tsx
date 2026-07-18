@@ -91,10 +91,18 @@ export default function NotificationsIndex({ notifications, filters }: Props) {
                         <div className="d-flex align-items-center mb-4 position-relative py-3">
                             <Link
                                 href="/admin/dashboard"
-                                className="btn btn-outline-secondary rounded-circle d-flex align-items-center justify-content-center border-0"
-                                style={{ width: '40px', height: '40px', backgroundColor: '#f8f9fa' }}
+                                className="text-decoration-none d-flex align-items-center"
                             >
-                                <i className="material-symbols-outlined fs-24 text-dark" style={{ width: '40px', height: '40px', backgroundColor: '#f8f9fa' }}>arrow_back</i>
+                                <i className="material-symbols-outlined fs-24 text-dark" style={{
+                                    width: "40px",
+                                    height: "40px",
+                                    backgroundColor: "rgb(255, 255, 255)",
+                                    display: "flex",
+                                    justifyContent: "center",
+                                    alignItems: "center",
+                                    borderRadius: "50px",
+                                    padding: "10px"
+                                }}>arrow_back</i>
                             </Link>
                             <h2 className="fs-22 fw-semibold text-center w-100 m-0" style={{ position: 'absolute', left: 0, right: 0, zIndex: -1 }}>
                                 Notification
@@ -106,10 +114,10 @@ export default function NotificationsIndex({ notifications, filters }: Props) {
                             <div className="d-flex align-items-center gap-2">
                                 <label className="fw-medium text-dark mb-0 text-nowrap">Date:</label>
                                 <div className="d-flex align-items-center gap-2">
-                                    <input 
-                                        type="date" 
-                                        className="form-control" 
-                                        value={date} 
+                                    <input
+                                        type="date"
+                                        className="form-control"
+                                        value={date}
                                         onChange={(e) => {
                                             setDate(e.target.value);
                                             handleFilterChange(e.target.value, perPage);
@@ -117,8 +125,8 @@ export default function NotificationsIndex({ notifications, filters }: Props) {
                                         style={{ width: 'auto' }}
                                     />
                                     {date && (
-                                        <button 
-                                            type="button" 
+                                        <button
+                                            type="button"
                                             className="btn btn-sm btn-outline-danger d-flex align-items-center justify-content-center px-2 py-1"
                                             onClick={() => {
                                                 setDate('');
@@ -133,9 +141,9 @@ export default function NotificationsIndex({ notifications, filters }: Props) {
                             </div>
                             <div className="d-flex align-items-center gap-2">
                                 <label className="fw-medium text-dark mb-0 text-nowrap">Show:</label>
-                                <select 
-                                    className="form-select" 
-                                    value={perPage} 
+                                <select
+                                    className="form-select"
+                                    value={perPage}
                                     onChange={(e) => {
                                         const val = Number(e.target.value);
                                         setPerPage(val);
@@ -249,7 +257,7 @@ export default function NotificationsIndex({ notifications, filters }: Props) {
                         )}
                     </div>
                 </div>
-            </div>
+            </div >
         </>
     );
 }
