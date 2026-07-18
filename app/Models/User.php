@@ -47,6 +47,7 @@ class User extends Authenticatable implements PasskeyUser
         "message_notifications",
         "like_notifications",
         "marketing_notifications",
+        "status",
     ];
 
     protected $hidden = ['password', 'two_factor_secret', 'two_factor_recovery_codes', 'remember_token'];
@@ -55,6 +56,11 @@ class User extends Authenticatable implements PasskeyUser
     public function destinations()
     {
         return $this->hasMany(UserDestination::class);
+    }
+
+    public function posts()
+    {
+        return $this->hasMany(\App\Models\Post::class);
     }
 
     /**
@@ -83,6 +89,7 @@ class User extends Authenticatable implements PasskeyUser
             'message_notifications' => 'boolean',
             'like_notifications' => 'boolean',
             'marketing_notifications' => 'boolean',
+            'status' => 'boolean',
         ];
     }
 

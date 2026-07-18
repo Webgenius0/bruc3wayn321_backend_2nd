@@ -48,16 +48,16 @@ export default function PostEdit() {
         style={{ minHeight: "75vh" }}
       >
         <div className="row">
-          <div className="col-lg-8">
+          <div className="col-lg-12">
             <div className="card bg-white p-4 border-0">
               <div className="card-body">
                 <div className="container mx-auto p-4">
                   <h1 className="text-2xl font-bold mb-4">Edit Post</h1>
-                  <form onSubmit={handleSubmit} className="grid gap-4 max-w-2xl">
-                    <div className="block">
-                      <span className="text-gray-700">
+                  <form onSubmit={handleSubmit} className="row g-3 w-100">
+                    <div className="col-12">
+                      <label className="form-label fw-medium">
                         Publisher (User)
-                      </span>
+                      </label>
                       <select
                         name="user_id"
                         className="form-control"
@@ -75,67 +75,65 @@ export default function PostEdit() {
                       {errors.user_id && <div className="text-danger mt-1 fs-14">{errors.user_id}</div>}
                     </div>
 
-                    <div className="block mt-3">
-                      <span className="text-gray-700">Slug</span>
+                    <div className="col-12">
+                      <label className="form-label fw-medium">Slug</label>
                       <input
                         type="text"
                         value={data.slug}
                         onChange={e => setData('slug', e.target.value)}
-                        className="mt-1 block w-full border rounded px-3 py-2"
+                        className="form-control"
                         required
                       />
                       {errors.slug && <div className="text-danger mt-1 fs-14">{errors.slug}</div>}
                     </div>
 
-                    <div className="block mt-3">
-                      <span className="text-gray-700">Content</span>
+                    <div className="col-12">
+                      <label className="form-label fw-medium">Content</label>
                       <textarea
                         rows={6}
                         value={data.content}
                         onChange={e => setData('content', e.target.value)}
-                        className="mt-1 block w-full border rounded px-3 py-2"
+                        className="form-control"
                         required
                       />
                       {errors.content && <div className="text-danger mt-1 fs-14">{errors.content}</div>}
                     </div>
 
-                    <div className="block mt-3">
-                      <span className="text-gray-700">Location</span>
+                    <div className="col-12">
+                      <label className="form-label fw-medium">Location</label>
                       <input
                         type="text"
                         value={data.location}
                         onChange={e => setData('location', e.target.value)}
-                        className="mt-1 block w-full border rounded px-3 py-2"
+                        className="form-control"
                       />
                     </div>
 
-                    <div className="grid grid-cols-2 gap-4 mt-3 d-flex gap-3">
-                      <div className="block flex-grow-1">
-                        <span className="text-gray-700">Latitude</span>
-                        <input
-                          type="number"
-                          step="any"
-                          value={data.latitude}
-                          onChange={e => setData('latitude', e.target.value)}
-                          className="mt-1 block w-full border rounded px-3 py-2"
-                        />
-                      </div>
-                      <div className="block flex-grow-1">
-                        <span className="text-gray-700">Longitude</span>
-                        <input
-                          type="number"
-                          step="any"
-                          value={data.longitude}
-                          onChange={e => setData('longitude', e.target.value)}
-                          className="mt-1 block w-full border rounded px-3 py-2"
-                        />
-                      </div>
+                    <div className="col-md-6">
+                      <label className="form-label fw-medium">Latitude</label>
+                      <input
+                        type="number"
+                        step="any"
+                        value={data.latitude}
+                        onChange={e => setData('latitude', e.target.value)}
+                        className="form-control"
+                      />
+                    </div>
+                    <div className="col-md-6">
+                      <label className="form-label fw-medium">Longitude</label>
+                      <input
+                        type="number"
+                        step="any"
+                        value={data.longitude}
+                        onChange={e => setData('longitude', e.target.value)}
+                        className="form-control"
+                      />
                     </div>
 
                     {/* Images Section */}
-                    <div className="block mt-4 pt-3 border-top">
+                    <div className="col-12 mt-4 pt-3 border-top">
                       <div className="d-flex justify-content-between align-items-center mb-2">
-                        <span className="text-gray-700 font-medium fs-18">Images</span>
+                        <span className="form-label fw-medium fs-18 mb-0">Images</span>
                         <div>
                           <input
                             type="file"
@@ -179,9 +177,9 @@ export default function PostEdit() {
                     </div>
 
                     {/* Audios Section */}
-                    <div className="block mt-4 pt-3 border-top">
+                    <div className="col-12 mt-4 pt-3 border-top">
                       <div className="d-flex justify-content-between align-items-center mb-2">
-                        <span className="text-gray-700 font-medium fs-18">Audios</span>
+                        <span className="form-label fw-medium fs-18 mb-0">Audios</span>
                         <div>
                           <input
                             type="file"
@@ -225,9 +223,9 @@ export default function PostEdit() {
                     </div>
 
                     {/* Videos Section */}
-                    <div className="block mt-4 pt-3 border-top mb-4">
+                    <div className="col-12 mt-4 pt-3 border-top mb-4">
                       <div className="d-flex justify-content-between align-items-center mb-2">
-                        <span className="text-gray-700 font-medium fs-18">Videos</span>
+                        <span className="form-label fw-medium fs-18 mb-0">Videos</span>
                         <div>
                           <input
                             type="file"
@@ -270,30 +268,30 @@ export default function PostEdit() {
                       </div>
                     </div>
 
-                    <div className="flex items-center space-x-4 mt-3">
-                      <label className="inline-flex items-center me-4">
+                    <div className="col-12 d-flex align-items-center gap-4 mt-3">
+                      <label className="d-inline-flex align-items-center">
                         <input
                           type="checkbox"
                           checked={data.is_draft}
                           onChange={e => setData('is_draft', e.target.checked)}
-                          className="form-check-input"
-                          style={{ width: "20px", height: "20px", marginTop: "2px" }}
+                          className="form-check-input mt-0"
+                          style={{ width: "20px", height: "20px" }}
                         />
-                        <span className="ml-2 ms-2">Draft</span>
+                        <span className="ms-2">Draft</span>
                       </label>
-                      <label className="inline-flex items-center">
+                      <label className="d-inline-flex align-items-center">
                         <input
                           type="checkbox"
                           checked={data.is_published}
                           onChange={e => setData('is_published', e.target.checked)}
-                          className="form-check-input"
-                          style={{ width: "20px", height: "20px", marginTop: "2px" }}
+                          className="form-check-input mt-0"
+                          style={{ width: "20px", height: "20px" }}
                         />
-                        <span className="ml-2 ms-2">Published</span>
+                        <span className="ms-2">Published</span>
                       </label>
                     </div>
 
-                    <div className="flex space-x-4 mt-4 pt-3 border-top">
+                    <div className="col-12 d-flex gap-3 mt-4 pt-3 border-top">
                       <button
                         type="submit"
                         disabled={processing}

@@ -129,6 +129,11 @@ class UserController extends Controller
                 'confirmed',
                 'min:6',
             ],
+
+            'status' => [
+                'nullable',
+                'boolean',
+            ],
         ]);
 
 

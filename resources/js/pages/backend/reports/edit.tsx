@@ -16,9 +16,9 @@ interface UserReport {
     description?: string;
     status: string;
     admin_note?: string;
-    reviewd_at?: string;
+    reviewed_at?: string;
     reporter: User | null;
-    reportedUser: User | null;
+    reported_user: User | null;
 }
 
 interface Props {
@@ -58,7 +58,7 @@ export default function Update({ report }: Props) {
     };
 
     const handleToggleUserStatus = () => {
-        const user = report.reportedUser;
+        const user = report.reported_user;
         if (!user) return;
 
         const action = user.status ? 'Suspend' : 'Unsuspend';
@@ -78,15 +78,16 @@ export default function Update({ report }: Props) {
                         <div className="d-flex justify-content-between align-items-center mb-4">
                             <h4 className="mb-0">Update Report #{report.id}</h4>
                             <div className="d-flex gap-2">
-                                {report.reportedUser && (
+                                {report.reported_user && (
                                     <button
-                                        className={`btn ${report.reportedUser.status ? 'btn-warning' : 'btn-info'} text-white`}
+                                        type="button"
+                                        className={`btn ${report.reported_user.status ? 'btn-warning' : 'btn-info'} text-white`}
                                         onClick={handleToggleUserStatus}
                                     >
                                         <i className="material-symbols-outlined fs-16 me-1">
-                                            {report.reportedUser.status ? 'block' : 'check_circle'}
+                                            {report.reported_user.status ? 'block' : 'check_circle'}
                                         </i>
-                                        {report.reportedUser.status ? 'Suspend User' : 'Unsuspend User'}
+                                        {report.reported_user.status ? 'Suspend User' : 'Unsuspend User'}
                                     </button>
                                 )}
                                 <Link href={`/admin/reports/show/${report.id}`} className="btn btn-secondary">
@@ -119,6 +120,7 @@ export default function Update({ report }: Props) {
                                                     <option value="pending">Pending</option>
                                                     <option value="resolved">Resolved (Accept Report)</option>
                                                     <option value="declined">Declined (Deny Report)</option>
+                                                    <option value="canceled">Canceled (Withdraw Report)</option>
                                                 </select>
                                             </div>
 
@@ -184,25 +186,27 @@ export default function Update({ report }: Props) {
                                         )}
 
                                         <h6 className="fw-medium mb-2">Reported User</h6>
-                                        {report.reportedUser && (
-                                            <div className="d-flex align-items-center mb-3">
-                                                <img
-                                                    src={getAvatarSrc(report.reportedUser.avatar)}
-                                                    alt={report.reportedUser.first_name}
-                                                    className="rounded-circle me-2"
-                                                    style={{ width: '36px', height: '36px', objectFit: 'cover' }}
-                                                />
-                                                <div>
-                                                    <p className="mb-0 fw-medium">{report.reportedUser.first_name} {report.reportedUser.last_name}</p>
-                                                    <small className="text-muted">{report.reportedUser.email}</small>
+                                        {report.reported_user && (
+                                            <div className="d-flex align-items-center bg-light p-3 rounded">
+                                                <div className="flex-shrink-0">
+                                                    <img
+                                                        src={getAvatarSrc(report.reported_user.avatar)}
+                                                        alt={report.reported_user.first_name}
+                                                        className="rounded-circle"
+                                                        style={{ width: '48px', height: '48px', objectFit: 'cover' }}
+                                                    />
+                                                </div>
+                                                <div className="flex-grow-1 ms-3">
+                                                    <p className="mb-0 fw-medium">{report.reported_user.first_name} {report.reported_user.last_name}</p>
+                                                    <small className="text-muted">{report.reported_user.email}</small>
                                                 </div>
                                             </div>
                                         )}
 
-                                        {report.reportedUser && (
+                                        {report.reported_user && (
                                             <div className="mt-3">
-                                                <span className={`badge ${report.reportedUser.status ? 'bg-success' : 'bg-danger'} w-100 py-2`}>
-                                                    {report.reportedUser.status ? 'User is Active' : 'User is Suspended'}
+                                                <span className={`badge ${report.reported_user.status ? 'bg-success' : 'bg-danger'} w-100 py-2`}>
+                                                    {report.reported_user.status ? 'User is Active' : 'User is Suspended'}
                                                 </span>
                                             </div>
                                         )}

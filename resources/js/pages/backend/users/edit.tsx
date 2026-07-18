@@ -31,6 +31,7 @@ export default function Edit({
         role: user.role || "",
         avatar: null as File | null,
         bio: user.bio || "",
+        status: user.status !== undefined ? !!user.status : true,
         _method: "put",
     });
 
@@ -496,6 +497,45 @@ export default function Edit({
                                 }
                             </div>
                         )}
+                    </div>
+                </div>
+
+                <div className="card bg-white p-20 rounded-10 border border-white mb-4">
+                    <h3 className="mb-20">Account Status</h3>
+
+                    <div>
+                        <label className="label fs-16 mb-2 d-block">User Status</label>
+
+                        <div className="d-flex align-items-center gap-3">
+                            <div
+                                className={`form-check form-switch mb-0`}
+                            >
+                                <input
+                                    className="form-check-input"
+                                    type="checkbox"
+                                    role="switch"
+                                    id="statusSwitch"
+                                    checked={data.status}
+                                    onChange={(e) => setData("status", e.target.checked)}
+                                    style={{ width: '44px', height: '22px', cursor: 'pointer' }}
+                                />
+                                <label
+                                    className="form-check-label ms-2 fw-medium"
+                                    htmlFor="statusSwitch"
+                                    style={{ lineHeight: '22px' }}
+                                >
+                                    {data.status ? (
+                                        <span className="text-success">Active</span>
+                                    ) : (
+                                        <span className="text-danger">Suspended</span>
+                                    )}
+                                </label>
+                            </div>
+                        </div>
+
+                        <small className="text-muted d-block mt-2">
+                            Suspended users cannot log in to the app.
+                        </small>
                     </div>
                 </div>
             </div>

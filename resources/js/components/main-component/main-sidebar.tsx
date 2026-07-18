@@ -40,7 +40,7 @@ const items: MenuItem[] = [
     {
         title: 'Report',
         href: '/admin/reports',
-        icon_name: 'message',
+        icon_name: 'Report',
         icon: 'material-symbols-outlined menu-icon',
     },
     {
@@ -72,22 +72,22 @@ const items: MenuItem[] = [
         ],
     },
 
-    {
-        title: 'Queue Management',
-        href: '',
-        icon_name: 'queue',
-        icon: 'material-symbols-outlined menu-icon',
-        children: [
-            {
-                title: 'Pending Jobs',
-                href: '/admin/queues',
-            },
-            {
-                title: 'Failed Jobs',
-                href: '/admin/failed-jobs',
-            },
-        ],
-    },
+    // {
+    //     title: 'Queue Management',
+    //     href: '',
+    //     icon_name: 'queue',
+    //     icon: 'material-symbols-outlined menu-icon',
+    //     children: [
+    //         {
+    //             title: 'Pending Jobs',
+    //             href: '/admin/queues',
+    //         },
+    //         {
+    //             title: 'Failed Jobs',
+    //             href: '/admin/failed-jobs',
+    //         },
+    //     ],
+    // },
 
     {
         title: 'System',
@@ -116,18 +116,18 @@ const items: MenuItem[] = [
                 title: 'SMTP Settings',
                 href: '/admin/settings/smtp',
             },
-            {
-                title: 'Stripe Settings',
-                href: '/admin/settings/stripe',
-            },
+            // {
+            //     title: 'Stripe Settings',
+            //     href: '/admin/settings/stripe',
+            // },
         ],
     },
-    {
-        title: 'Profile',
-        href: '/admin/profile',
-        icon_name: 'account_circle',
-        icon: 'material-symbols-outlined menu-icon',
-    },
+    // {
+    //     title: 'Profile',
+    //     href: '/admin/profile',
+    //     icon_name: 'account_circle',
+    //     icon: 'material-symbols-outlined menu-icon',
+    // },
 ];
 
 export default function MainSidebar() {
@@ -163,18 +163,18 @@ export default function MainSidebar() {
                     className="d-block text-decoration-none position-relative"
                     href={home()}
                 >
-                     <img
-                src={
-                    logo
-                        ? `/${logo}`
-                        : '/backend/assets/images/seller1.png'
-                }
-                alt="Logo"
-                style={{
-                    maxHeight: '50px',
-                    width: 'auto',
-                }}
-            />
+                    <img
+                        src={
+                            logo
+                                ? `/${logo}`
+                                : '/backend/assets/images/seller1.png'
+                        }
+                        alt="Logo"
+                        style={{
+                            maxHeight: '50px',
+                            width: 'auto',
+                        }}
+                    />
 
                 </Link>
 

@@ -69,6 +69,10 @@ class SocialAuthController extends Controller
 
             $loginUser = User::find($user->id);
 
+            if (!$loginUser->status) {
+                return $this->errorResponse('Your account has been suspended. Please contact support.', 403);
+            }
+
             $token = $loginUser->createToken('auth_token')->plainTextToken;
 
             return $this->successResponse("Login Successfull", [

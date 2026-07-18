@@ -81,4 +81,8 @@ Route::middleware(['auth:sanctum', 'admin'])->prefix('admin')->group(function ()
 
 
     Route::get('/reports', [UserBlockReportAdminController::class, 'Reportindex'])->name('admin.report.index');
+    Route::get('/reports/show/{id}', [UserBlockReportAdminController::class, 'reportDetails'])->name('admin.report.details');
+    Route::get('/reports/edit/{id}', [UserBlockReportAdminController::class, 'reportEdit'])->name('admin.report.edit');
+    Route::put('/reports/update/{id}', [UserBlockReportAdminController::class, 'update'])->name('admin.report.update');
+    Route::put('/reports/toggle-active-status/{id}', [UserBlockReportAdminController::class, 'toggleActiveStatus'])->name('admin.report.toggle-active-status');
 });

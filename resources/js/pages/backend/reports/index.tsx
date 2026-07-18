@@ -22,7 +22,7 @@ interface UserReport {
         email: string;
         avatar?: string;
     };
-    reportedUser: {
+    reported_user: {
         id: number;
         first_name: string;
         last_name: string;
@@ -64,6 +64,7 @@ const statusBadge: Record<string, string> = {
     pending: 'bg-warning text-dark',
     resolved: 'bg-success',
     declined: 'bg-danger',
+    canceled: 'bg-secondary',
 };
 
 export default function ReportIndex({ reports, filters }: Props) {
@@ -118,7 +119,7 @@ export default function ReportIndex({ reports, filters }: Props) {
     };
 
     const getAvatarSrc = (avatar?: string) => {
-        return avatar ? `/${avatar}` : '/backend/assets/images/placholder.png';
+        return avatar ? `/${avatar}` : '/backend/assets/images/placeholder.png';
     };
 
     return (
@@ -137,7 +138,7 @@ export default function ReportIndex({ reports, filters }: Props) {
                                         className="form-select"
                                         value={status}
                                         onChange={(e) => setStatus(e.target.value)}
-                                        style={{ width: '140px', padding: '14px' }}
+                                        style={{ width: '140px' }}
                                     >
                                         <option value="">All Status</option>
                                         <option value="pending">Pending</option>
@@ -232,25 +233,26 @@ export default function ReportIndex({ reports, filters }: Props) {
                                                         <td>
                                                             <div className="d-flex align-items-center">
                                                                 <div className="flex-shrink-0">
+
                                                                     <img
-                                                                        alt={report.reportedUser?.first_name}
+                                                                        alt={report.reported_user?.first_name}
                                                                         className="rounded-circle"
-                                                                        src={getAvatarSrc(report.reportedUser?.avatar)}
+                                                                        src={getAvatarSrc(report.reported_user?.avatar)}
                                                                         style={{ width: '32px', height: '32px', objectFit: 'cover' }}
                                                                     />
                                                                 </div>
                                                                 <div className="flex-grow-1 ms-2">
                                                                     <h6 className="fw-medium fs-14 mb-0">
-                                                                        {report.reportedUser?.first_name} {report.reportedUser?.last_name}
+                                                                        {report.reported_user?.first_name} {report.reported_user?.last_name}
                                                                     </h6>
-                                                                    <small className="text-muted">{report.reportedUser?.email}</small>
+                                                                    <small className="text-muted">{report.reported_user?.email}</small>
                                                                 </div>
                                                             </div>
                                                         </td>
 
                                                         <td>
                                                             <span className="text-muted fs-14" title={report.description}>
-                                                                {report.description_short}
+                                                                {report.description ? (report.description.length > 50 ? report.description.substring(0, 50) + '...' : report.description) : '—'}
                                                             </span>
                                                         </td>
 
@@ -260,7 +262,13 @@ export default function ReportIndex({ reports, filters }: Props) {
                                                             </span>
                                                         </td>
 
-                                                        <td className="text-muted fs-14">{report.created_at_formatted}</td>
+                                                        <td className="text-muted fs-14">
+                                                            {new Date(report.created_at).toLocaleDateString('en-US', {
+                                                                year: 'numeric',
+                                                                month: 'short',
+                                                                day: 'numeric',
+                                                            })}
+                                                        </td>
 
                                                         <td>
                                                             <div className="d-flex justify-content-end" style={{ gap: '12px' }}>

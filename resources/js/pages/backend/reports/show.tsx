@@ -20,9 +20,9 @@ interface UserReport {
     admin_note?: string;
     created_at_formatted?: string;
     created_at: string;
-    reviewd_at?: string;
+    reviewed_at?: string;
     reporter: User | null;
-    reportedUser: User | null;
+    reported_user: User | null;
     reviewer?: User | null;
 }
 
@@ -37,13 +37,14 @@ export default function Show({ report }: Props) {
     const [processing, setProcessing] = useState(false);
 
     const getAvatarSrc = (avatar?: string) => {
-        return avatar ? `/${avatar}` : '/backend/assets/images/placholder.png';
+        return avatar ? `/${avatar}` : '/backend/assets/images/placeholder.png';
     };
 
     const statusBadge: Record<string, string> = {
         pending: 'bg-warning text-dark',
         resolved: 'bg-success',
         declined: 'bg-danger',
+        canceled: 'bg-secondary',
     };
 
     const handleUpdateStatus = async () => {
@@ -68,7 +69,7 @@ export default function Show({ report }: Props) {
     };
 
     const handleToggleUserStatus = () => {
-        const user = report.reportedUser;
+        const user = report.reported_user;
         if (!user) return;
 
         const action = user.status ? 'Suspend' : 'Unsuspend';
@@ -112,15 +113,15 @@ export default function Show({ report }: Props) {
                                         </button>
                                     </>
                                 )}
-                                {report.reportedUser && (
+                                {report.reported_user && (
                                     <button
-                                        className={`btn ${report.reportedUser.status ? 'btn-warning' : 'btn-info'} text-white`}
+                                        className={`btn ${report.reported_user.status ? 'btn-warning' : 'btn-info'} text-white`}
                                         onClick={handleToggleUserStatus}
                                     >
                                         <i className="material-symbols-outlined fs-16 me-1">
-                                            {report.reportedUser.status ? 'block' : 'check_circle'}
+                                            {report.reported_user.status ? 'block' : 'check_circle'}
                                         </i>
-                                        {report.reportedUser.status ? 'Suspend User' : 'Unsuspend User'}
+                                        {report.reported_user.status ? 'Suspend User' : 'Unsuspend User'}
                                     </button>
                                 )}
                                 <Link
@@ -147,7 +148,7 @@ export default function Show({ report }: Props) {
                                             <span className={`badge ${statusBadge[report.status] || 'bg-secondary'} fs-14 py-2 px-3`}>
                                                 {report.status.charAt(0).toUpperCase() + report.status.slice(1)}
                                             </span>
-                                            {report.reportedUser && !report.reportedUser.status && (
+                                            {report.reported_user && !report.reported_user.status && (
                                                 <span className="badge bg-danger fs-14 py-2 px-3 ms-2">
                                                     Reported User Suspended
                                                 </span>
@@ -181,8 +182,8 @@ export default function Show({ report }: Props) {
                                                     ? `${report.reviewer.first_name} ${report.reviewer.last_name}`
                                                     : 'Not reviewed yet'}
                                             </span>
-                                            {report.reviewd_at && report.reviewd_at !== 'Not reviewed yet' && (
-                                                <span className="text-muted ms-2 fs-14">({report.reviewd_at})</span>
+                                            {report.reviewed_at && report.reviewed_at !== 'Not reviewed yet' && (
+                                                <span className="text-muted ms-2 fs-14">({report.reviewed_at})</span>
                                             )}
                                         </div>
 
@@ -240,43 +241,43 @@ export default function Show({ report }: Props) {
                                             <i className="material-symbols-outlined fs-18 me-1">block</i>
                                             Reported User
                                         </h5>
-                                        {report.reportedUser ? (
+                                        {report.reported_user ? (
                                             <>
                                                 <div className="d-flex align-items-center mb-3">
                                                     <div className="flex-shrink-0 me-3">
                                                         <img
-                                                            src={getAvatarSrc(report.reportedUser.avatar)}
-                                                            alt={report.reportedUser.first_name}
+                                                            src={getAvatarSrc(report.reported_user.avatar)}
+                                                            alt={report.reported_user.first_name}
                                                             className="rounded-circle border"
                                                             style={{ width: '56px', height: '56px', objectFit: 'cover' }}
                                                         />
                                                     </div>
                                                     <div className="flex-grow-1 overflow-hidden">
                                                         <h6 className="fw-semibold mb-0 text-truncate">
-                                                            {report.reportedUser.first_name} {report.reportedUser.last_name}
+                                                            {report.reported_user.first_name} {report.reported_user.last_name}
                                                         </h6>
-                                                        <p className="text-muted mb-0 fs-14 text-truncate">{report.reportedUser.email}</p>
+                                                        <p className="text-muted mb-0 fs-14 text-truncate">{report.reported_user.email}</p>
                                                     </div>
                                                 </div>
 
                                                 <div className="mb-3">
-                                                    <span className={`badge ${report.reportedUser.status ? 'bg-success' : 'bg-danger'} w-100 py-2 fs-13`}>
-                                                        {report.reportedUser.status ? 'Active' : 'Suspended'}
+                                                    <span className={`badge ${report.reported_user.status ? 'bg-success' : 'bg-danger'} w-100 py-2 fs-13`}>
+                                                        {report.reported_user.status ? 'Active' : 'Suspended'}
                                                     </span>
                                                 </div>
 
                                                 <div className="d-grid gap-2">
                                                     <Link
-                                                        href={`/admin/user/show/${report.reportedUser.id}`}
+                                                        href={`/admin/user/show/${report.reported_user.id}`}
                                                         className="btn btn-outline-primary btn-sm"
                                                     >
                                                         View Profile
                                                     </Link>
                                                     <button
-                                                        className={`btn ${report.reportedUser.status ? 'btn-warning' : 'btn-info'} btn-sm text-white`}
+                                                        className={`btn ${report.reported_user.status ? 'btn-warning' : 'btn-info'} btn-sm text-white`}
                                                         onClick={handleToggleUserStatus}
                                                     >
-                                                        {report.reportedUser.status ? 'Suspend User' : 'Unsuspend User'}
+                                                        {report.reported_user.status ? 'Suspend User' : 'Unsuspend User'}
                                                     </button>
                                                 </div>
                                             </>

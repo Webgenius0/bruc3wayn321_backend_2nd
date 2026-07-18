@@ -11,6 +11,9 @@ class UserReport extends Model
         'reported_user_id',
         'description',
         'status',
+        'admin_note',
+        'reviewed_at',
+        'reviewer_id',
     ];
 
     public function reporter()
@@ -21,5 +24,10 @@ class UserReport extends Model
     public function reportedUser()
     {
         return $this->belongsTo(User::class, 'reported_user_id');
+    }
+
+    public function reviewer()
+    {
+        return $this->belongsTo(User::class, 'reviewer_id');
     }
 }

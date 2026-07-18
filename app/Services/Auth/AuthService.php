@@ -129,6 +129,13 @@ class AuthService
             throw new \Exception('User email not Verified');
         }
 
+        if (!$user->status) {
+            Auth::logout();
+            throw ValidationException::withMessages([
+                'email' => ['Your account has been suspended. Please contact support.']
+            ]);
+        }
+
         $token = $user->createToken('api-token')->plainTextToken;
 
         return [
