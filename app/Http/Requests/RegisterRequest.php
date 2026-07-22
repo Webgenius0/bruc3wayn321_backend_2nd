@@ -30,7 +30,7 @@ class RegisterRequest extends FormRequest
             'password'      => ['required', 'confirmed', 'min:8'],
             'phone'         => ['required', 'string', 'max:20'],
             'avatar'        => ['nullable'],
-            'date_of_birth' => ['required', 'date', 'before:today'],
+            'date_of_birth' => ['required', 'date'],
         ];
     }
 }

@@ -35,7 +35,7 @@ class AuthApiController extends Controller
         return $this->successResponse(
             'Otp Send to Email',
             $result,
-            201
+            200
         );
     }
 

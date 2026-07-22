@@ -27,16 +27,35 @@ class SocialAuthController extends Controller
                 ? $socialUser->getRaw()
                 : $socialUser->user;
 
-            $firstName = $raw['given_name']
-                ?? $raw['first_name']
-                ?? explode(' ', $socialUser->getName(), 2)[0]
-                ?? '';
+            // dd($raw);
 
-            $lastName = $raw['family_name']
-                ?? $raw['last_name']
-                ?? (count(explode(' ', $socialUser->getName(), 2)) > 1
-                    ? explode(' ', $socialUser->getName(), 2)[1]
-                    : '');
+            $firstName = '';
+            $lastName = '';
+            $avatar = null;
+
+            if ($request->provider === 'apple') {
+
+                $email = $socialUser->getEmail();
+
+                $firstName = $raw['given_name']
+                    ?? $raw['first_name']
+                    ?? Str::title(Str::before($email, '@'));
+
+                $lastName = '';
+
+                $avatar = null;
+            } else {
+
+                $firstName = $raw['given_name']
+                    ?? $raw['first_name']
+                    ?? explode(' ', $socialUser->getName() ?? '', 2)[0];
+
+                $lastName = $raw['family_name']
+                    ?? $raw['last_name']
+                    ?? (explode(' ', $socialUser->getName() ?? '', 2)[1] ?? '');
+
+                $avatar = $socialUser->getAvatar();
+            }
 
             // Check if user exists
             $user = User::where('email', $socialUser->getEmail())->first();
@@ -56,14 +75,16 @@ class SocialAuthController extends Controller
                     'user_name'      => $userName,
                     'email'     => $socialUser->getEmail(),
                     'role'     => 'user',
-                    'avatar'    => $socialUser->getAvatar(),
+                    'avatar'    => $avatar,
                     'password'  => bcrypt(Str::random(32)),
                 ]);
             } else {
                 // Update Google info if already exists
                 $user->update([
                     'social_id' => $socialUser->getId(),
-                    'avatar'    => $socialUser->getAvatar(),
+                    'first_name'      => $firstName,
+                    'last_name'      => $lastName,
+                    'avatar'    => $avatar,
                 ]);
             }
 
