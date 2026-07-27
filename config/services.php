@@ -39,6 +39,11 @@ return [
         'key' => env('EXCHANGE_RATE_API_KEY'),
     ],
 
+    'revenuecat' => [
+        'project_id' => env('REVENUECAT_PROJECT_ID'),
+        'secret_api_key' => env('REVENUECAT_SECRET_API_KEY'),
+    ],
+
     'openweather' => [
         'api_key' => env('OPENWEATHER_API_KEY'),
     ],

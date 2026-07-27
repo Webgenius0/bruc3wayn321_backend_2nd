@@ -89,7 +89,7 @@ class AiConciergeService
 
         // Build messages array for OpenAI
         $messages = $this->buildMessages($conversation);
-
+        
         // Call OpenAI API
         $response = Http::withHeaders([
             'Authorization' => 'Bearer ' . $this->apiKey,

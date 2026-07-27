@@ -1,8 +1,10 @@
 <?php
 
-use App\Http\Controllers\API\User\UserController;
-use App\Http\Controllers\API\User\UserBlockReportController;
 use App\Http\Controllers\API\Notification\NotificationApiController;
+use App\Http\Controllers\API\User\UserBlockReportController;
+use App\Http\Controllers\API\User\UserController;
+use App\Models\FirebaseToken;
+use App\Services\FCMService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
@@ -47,4 +49,26 @@ Route::controller(UserBlockReportController::class)
 Route::controller(NotificationApiController::class)->middleware('auth:sanctum')->group(function () {
     Route::get('notifications', 'list');
     Route::get('notifications/unread-counts', 'unreadCounts');
+});
+
+
+Route::middleware('auth:sanctum')->get('/test-push', function () {
+    $firebaseToken = FirebaseToken::where('user_id', auth()->id())->first();
+
+    if (!$firebaseToken) {
+        return response()->json([
+            'message' => 'No Firebase token found.'
+        ], 404);
+    }
+
+    $fcmService = new FCMService();
+    $fcmService->sendMessage(
+        $firebaseToken->token,
+        'Test Push',
+        'Success'
+    );
+
+    return response()->json([
+        'message' => 'Notification sent successfully.'
+    ]);
 });

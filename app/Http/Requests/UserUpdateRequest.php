@@ -25,13 +25,13 @@ class UserUpdateRequest extends FormRequest
     {
         return [
             'first_name' => [
-                'required',
+                'nullable',
                 'string',
                 'max:255',
             ],
 
             'last_name' => [
-                'required',
+                'nullable',
                 'string',
                 'max:255',
             ],
@@ -44,13 +44,12 @@ class UserUpdateRequest extends FormRequest
             ],
 
             'phone' => [
-                'required',
+                'nullable',
             ],
 
             'date_of_birth' => [
-                'required',
+                'nullable',
                 'date',
-                'before:today',
             ],
 
             'avatar' => [

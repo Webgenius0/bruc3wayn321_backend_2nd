@@ -254,8 +254,6 @@ class ChatApiController extends Controller
 
         $message->load('attachments');
 
-        // dd($message);
-
         SendMessage::dispatch($message, $message->chat_id ?? $message['chat_id']);
 
         return Helper::successData($message, 'message send successfully');

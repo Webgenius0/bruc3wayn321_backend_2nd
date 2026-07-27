@@ -41,18 +41,18 @@ class SocialAuthController extends Controller
                     ?? $raw['first_name']
                     ?? Str::title(Str::before($email, '@'));
 
-                $lastName = '';
+                $lastName = null;
 
                 $avatar = null;
             } else {
 
                 $firstName = $raw['given_name']
                     ?? $raw['first_name']
-                    ?? explode(' ', $socialUser->getName() ?? '', 2)[0];
+                    ?? explode(' ', $socialUser->getName() ?? null, 2)[0];
 
                 $lastName = $raw['family_name']
                     ?? $raw['last_name']
-                    ?? (explode(' ', $socialUser->getName() ?? '', 2)[1] ?? '');
+                    ?? (explode(' ', $socialUser->getName() ?? null, 2)[1] ?? null);
 
                 $avatar = $socialUser->getAvatar();
             }

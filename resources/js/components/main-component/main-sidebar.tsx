@@ -49,6 +49,12 @@ const items: MenuItem[] = [
         icon_name: 'Notifications',
         icon: 'material-symbols-outlined menu-icon',
     },
+    {
+        title: 'Subscription Plans',
+        href: '/admin/subscription-plans',
+        icon_name: 'workspace_premium',
+        icon: 'material-symbols-outlined menu-icon',
+    },
 
 
     {
@@ -68,6 +74,10 @@ const items: MenuItem[] = [
             {
                 title: 'Terms & Conditions',
                 href: '/admin/page/terms-and-conditions',
+            },
+            {
+                title: 'Fair Use Policy',
+                href: '/admin/page/fair-use-policy',
             },
         ],
     },

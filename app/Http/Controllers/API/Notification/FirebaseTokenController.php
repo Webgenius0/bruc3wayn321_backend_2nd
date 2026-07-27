@@ -91,7 +91,7 @@ class FirebaseTokenController extends Controller
             }
         }
 
-        
+
         return "Success";
     }
 }

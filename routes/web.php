@@ -17,15 +17,8 @@ require __DIR__ . '/settings.php';
 
 
 
-Route::get('/message', function () {
-    return view('chat-home');
-});
-
-Route::post('/chatroom', function (Request $request) {
-
-    $username = $request->name;
-    return view('chatroom.chat', compact('username'));
-})->name('chatroom');
-// ->middleware('auth')
-
-Route::post('/send-message', [ChatAppController::class, 'sendMessage'])->name('sendMessage');
+// Chat App Routes
+Route::get('/chat', [ChatAppController::class, 'enterName'])->name('chat.enter-name');
+Route::post('/chat/room', [ChatAppController::class, 'chatroom'])->name('chat.room');
+Route::get('/chat/room', [ChatAppController::class, 'chatroom']); // For reloads
+Route::post('/send-message', [ChatAppController::class, 'sendMessage'])->name('chat.send-message');

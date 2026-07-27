@@ -64,7 +64,7 @@ class SettingsController extends Controller
         $page = Page::where('slug', $slug)->first();
 
         return $this->successResponse(
-            $page->title,
+            $page->title ?? 'No title',
             $page,
             200
         );
