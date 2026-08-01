@@ -1,21 +1,110 @@
-import { useAppearance } from '@/hooks/use-appearance';
-import { Link } from '@inertiajs/react';
+import { useMemo, useState, type FormEvent } from 'react';
+import { Link, router, usePage } from '@inertiajs/react';
 import { logout } from '@/routes';
-import { usePage } from '@inertiajs/react';
+import { useAppearance } from '@/hooks/use-appearance';
+
+type SearchItem = {
+    label: string;
+    description: string;
+    route: string;
+    keywords: string[];
+};
+
+const searchItems: SearchItem[] = [
+    {
+        label: 'Dashboard',
+        description: 'Overview and system summary',
+        route: '/admin/dashboard',
+        keywords: ['overview', 'home', 'summary', 'analytics'],
+    },
+    {
+        label: 'Users',
+        description: 'Manage administrators and members',
+        route: '/admin/users',
+        keywords: ['people', 'members', 'accounts', 'admins'],
+    },
+    {
+        label: 'Posts',
+        description: 'Review and manage content',
+        route: '/admin/posts',
+        keywords: ['content', 'articles', 'blogs', 'news'],
+    },
+    {
+        label: 'Messages',
+        description: 'View inbox conversations',
+        route: '/admin/messages',
+        keywords: ['chat', 'inbox', 'conversations', 'support'],
+    },
+    {
+        label: 'Support Issues',
+        description: 'Track tickets and replies',
+        route: '/admin/support-issues',
+        keywords: ['tickets', 'help', 'issues', 'requests'],
+    },
+    {
+        label: 'Reports',
+        description: 'Review reported accounts and content',
+        route: '/admin/reports',
+        keywords: ['abuse', 'moderation', 'flagged', 'complaints'],
+    },
+    {
+        label: 'Settings',
+        description: 'Configure system preferences',
+        route: '/admin/settings/system',
+        keywords: ['system', 'preferences', 'configuration', 'setup'],
+    },
+    {
+        label: 'Profile',
+        description: 'Update your admin profile',
+        route: '/admin/profile',
+        keywords: ['account', 'personal', 'info', 'details'],
+    },
+];
 
 export default function MainNavbar() {
     const { resolvedAppearance, updateAppearance } = useAppearance();
     const { auth } = usePage().props;
+    const [searchQuery, setSearchQuery] = useState('');
+    const [isSearchFocused, setIsSearchFocused] = useState(false);
 
     const toggleTheme = () => {
         updateAppearance(resolvedAppearance === 'dark' ? 'light' : 'dark');
+    };
+
+    const filteredSearchItems = useMemo(() => {
+        const query = searchQuery.trim().toLowerCase();
+
+        if (!query) {
+            return searchItems.slice(0, 6);
+        }
+
+        return searchItems.filter((item) => {
+            const haystack = [item.label, item.description, ...item.keywords]
+                .join(' ')
+                .toLowerCase();
+
+            return haystack.includes(query);
+        });
+    }, [searchQuery]);
+
+    const handleSearchSubmit = (event: FormEvent<HTMLFormElement>) => {
+        event.preventDefault();
+
+        const target = filteredSearchItems[0] ?? searchItems[0];
+
+        if (target) {
+            router.visit(target.route);
+            setSearchQuery('');
+            setIsSearchFocused(false);
+        }
     };
 
     return (
         <>
             <header
                 className="header-area bg-white mb-4 rounded-10 border border-white"
-                id="header-area">
+                id="header-area"
+            >
                 <div className="row align-items-center">
                     <div className="col-md-6">
                         <div className="left-header-content">
@@ -29,48 +118,83 @@ export default function MainNavbar() {
                                         <span
                                             className="border-1 d-block for-dark-burger"
                                             style={{
-                                                borderBottom: "1px solid #475569",
-                                                height: "1px",
-                                                width: "25px",
+                                                borderBottom: '1px solid #475569',
+                                                height: '1px',
+                                                width: '25px',
                                             }}
                                         />
 
                                         <span
                                             className="border-1 d-block for-dark-burger"
                                             style={{
-                                                borderBottom: "1px solid #475569",
-                                                height: "1px",
-                                                width: "25px",
-                                                margin: "6px 0",
+                                                borderBottom: '1px solid #475569',
+                                                height: '1px',
+                                                width: '25px',
+                                                margin: '6px 0',
                                             }}
                                         />
 
                                         <span
                                             className="border-1 d-block for-dark-burger"
                                             style={{
-                                                borderBottom: "1px solid #475569",
-                                                height: "1px",
-                                                width: "25px",
+                                                borderBottom: '1px solid #475569',
+                                                height: '1px',
+                                                width: '25px',
                                             }}
                                         />
                                     </button>
                                 </li>
 
-                                {/* <li>
-                                    <form className="src-form position-relative">
+                                <li className="d-none d-xl-block flex-grow-1 me-3 position-relative">
+                                    <form className="src-form position-relative" onSubmit={handleSearchSubmit}>
                                         <input
                                             className="form-control"
-                                            placeholder="Search here..."
+                                            placeholder="Search dashboard, users, posts..."
                                             type="text"
+                                            value={searchQuery}
+                                            onChange={(event) => setSearchQuery(event.target.value)}
+                                            onFocus={() => setIsSearchFocused(true)}
+                                            onBlur={() => {
+                                                window.setTimeout(() => setIsSearchFocused(false), 120);
+                                            }}
                                         />
 
-                                        <div className="src-btn position-absolute top-50 start-0 translate-middle-y bg-transparent p-0 border-0">
-                                            <span className="material-symbols-outlined">
-                                                search
-                                            </span>
-                                        </div>
+                                        <button
+                                            aria-label="Search"
+                                            className="src-btn position-absolute top-50 start-0 translate-middle-y bg-transparent p-0 border-0"
+                                            type="submit"
+                                        >
+                                            <span className="material-symbols-outlined">search</span>
+                                        </button>
+
+                                        {isSearchFocused && (
+                                            <div className="position-absolute top-100 start-0 w-100 mt-2 rounded-10 border border-light bg-white shadow-sm z-3" style={{ maxHeight: '280px', overflowY: 'auto' }}>
+                                                {filteredSearchItems.length > 0 ? (
+                                                    filteredSearchItems.map((item) => (
+                                                        <button
+                                                            key={item.label}
+                                                            className="d-flex flex-column align-items-start text-start w-100 border-0 bg-transparent px-3 py-2 text-body"
+                                                            onMouseDown={(event) => event.preventDefault()}
+                                                            onClick={() => {
+                                                                router.visit(item.route);
+                                                                setSearchQuery('');
+                                                                setIsSearchFocused(false);
+                                                            }}
+                                                            type="button"
+                                                        >
+                                                            <span className="fw-semibold">{item.label}</span>
+                                                            <small className="text-muted">{item.description}</small>
+                                                        </button>
+                                                    ))
+                                                ) : (
+                                                    <div className="px-3 py-2 text-muted">
+                                                        No matching admin pages found.
+                                                    </div>
+                                                )}
+                                            </div>
+                                        )}
                                     </form>
-                                </li> */}
+                                </li>
                             </ul>
                         </div>
                     </div>
@@ -78,7 +202,6 @@ export default function MainNavbar() {
                     <div className="col-md-6">
                         <div className="right-header-content mt-3 mt-md-0">
                             <ul className="d-flex align-items-center justify-content-center justify-content-md-end ps-0 mb-0 list-unstyled">
-
                                 {/* Dark Mode */}
                                 <li className="header-right-item light-dark-item">
                                     <div className="light-dark">
@@ -90,15 +213,11 @@ export default function MainNavbar() {
                                             aria-label="Toggle dark mode"
                                         >
                                             <span className="dark">
-                                                <i className="material-symbols-outlined">
-                                                    dark_mode
-                                                </i>
+                                                <i className="material-symbols-outlined">dark_mode</i>
                                             </span>
 
                                             <span className="light">
-                                                <i className="material-symbols-outlined">
-                                                    light_mode
-                                                </i>
+                                                <i className="material-symbols-outlined">light_mode</i>
                                             </span>
                                         </button>
                                     </div>
@@ -115,20 +234,18 @@ export default function MainNavbar() {
                                                 <img
                                                     alt="admin"
                                                     className="rounded-circle admin-img-width-for-mobile"
-                                                    src={auth?.user?.avatar
-                                                        ? `/${auth.user.avatar}`
-                                                        : '/backend/assets/images/placholder.png'}
+                                                    src={auth?.user?.avatar ? `/${auth.user.avatar}` : '/backend/assets/images/placholder.png'}
                                                     style={{
-                                                        width: "40px",
-                                                        height: "40px",
+                                                        width: '40px',
+                                                        height: '40px',
                                                     }}
                                                 />
 
                                                 <span
                                                     className="d-block bg-success-60 border border-2 border-white rounded-circle position-absolute end-0 bottom-0"
                                                     style={{
-                                                        width: "11px",
-                                                        height: "11px",
+                                                        width: '11px',
+                                                        height: '11px',
                                                     }}
                                                 />
                                             </div>
@@ -140,14 +257,10 @@ export default function MainNavbar() {
                                                     <img
                                                         alt="admin"
                                                         className="rounded-circle"
-                                                        src={
-                                                            auth?.user?.avatar
-                                                                ? `/${auth.user.avatar}`
-                                                                : '/backend/assets/images/placholder.png'
-                                                        }
+                                                        src={auth?.user?.avatar ? `/${auth.user.avatar}` : '/backend/assets/images/placholder.png'}
                                                         style={{
-                                                            width: "40px",
-                                                            height: "40px",
+                                                            width: '40px',
+                                                            height: '40px',
                                                         }}
                                                     />
                                                 </div>
@@ -165,23 +278,21 @@ export default function MainNavbar() {
                                             </div>
                                             <ul className="admin-link mb-0 list-unstyled">
                                                 <li>
-                                                    <a className="dropdown-item admin-item-link d-flex align-items-center text-body" href={"/admin/profile"}>
-                                                        <i className="material-symbols-outlined">
-                                                            person
-                                                        </i>
-                                                        <span className="ms-2">
-                                                            My Profile
-                                                        </span>
+                                                    <a
+                                                        className="dropdown-item admin-item-link d-flex align-items-center text-body"
+                                                        href={'/admin/profile'}
+                                                    >
+                                                        <i className="material-symbols-outlined">person</i>
+                                                        <span className="ms-2">My Profile</span>
                                                     </a>
                                                 </li>
                                                 <li>
-                                                    <Link className="dropdown-item admin-item-link d-flex align-items-center text-body" href={logout()}>
-                                                        <i className="material-symbols-outlined">
-                                                            logout
-                                                        </i>
-                                                        <span className="ms-2">
-                                                            Logout
-                                                        </span>
+                                                    <Link
+                                                        className="dropdown-item admin-item-link d-flex align-items-center text-body"
+                                                        href={logout()}
+                                                    >
+                                                        <i className="material-symbols-outlined">logout</i>
+                                                        <span className="ms-2">Logout</span>
                                                     </Link>
                                                 </li>
                                             </ul>
@@ -194,5 +305,5 @@ export default function MainNavbar() {
                 </div>
             </header>
         </>
-    )
+    );
 }
