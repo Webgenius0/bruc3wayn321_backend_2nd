@@ -4,7 +4,6 @@ namespace App\Http\Middleware;
 
 use Closure;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Auth;
 use Symfony\Component\HttpFoundation\Response;
 
 class AdminMiddleware
@@ -12,33 +11,15 @@ class AdminMiddleware
     /**
      * Handle an incoming request.
      *
-     * @param  \Closure(\Illuminate\Http\Request): (\Symfony\Component\HttpFoundation\Response)  $next
+     * @param  Closure(Request): (Response)  $next
      */
     public function handle(Request $request, Closure $next): Response
     {
-        $user = $request->user(); // Sanctum user
+        $user = $request->user();
 
-        if (!$user || $user->role !== 'admin') {
-
-            if ($request->expectsJson() || $request->is('api/*')) {
-                // API: revoke token
-                if ($user && $request->bearerToken()) {
-                    $request->user()->currentAccessToken()->delete();
-                }
-                return response()->json(['message' => 'Unauthorized'], 403);
-            } else {
-                // Web: log out
-
-                // Web / Session guard
-                if (Auth::guard('web')->check()) {
-                    Auth::guard('web')->logout();
-                }
-                return redirect()->route('login')->with('flash', ['toast' => ['type' => 'error', 'message' => 'Unauthorized access']]);
-            }
+        if (! $user || ! in_array($user->role, ['admin', 'super_admin'], true)) {
+            abort(403, 'Administrator access is required.');
         }
-
-
-
         return $next($request);
     }
 }

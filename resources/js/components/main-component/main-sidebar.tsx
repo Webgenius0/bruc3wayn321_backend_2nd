@@ -38,6 +38,12 @@ const items: MenuItem[] = [
         icon: 'material-symbols-outlined menu-icon',
     },
     {
+        title: 'Support Issues',
+        href: '/admin/support-issues',
+        icon_name: 'support_agent',
+        icon: 'material-symbols-outlined menu-icon',
+    },
+    {
         title: 'Report',
         href: '/admin/reports',
         icon_name: 'Report',
@@ -66,6 +72,10 @@ const items: MenuItem[] = [
             {
                 title: 'FAQs',
                 href: '/admin/faq/list',
+            },
+            {
+                title: 'Support Page',
+                href: '/admin/page/support',
             },
             {
                 title: 'Privacy Policy',

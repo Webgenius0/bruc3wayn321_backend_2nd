@@ -42,14 +42,12 @@ return [
     'revenuecat' => [
         'project_id' => env('REVENUECAT_PROJECT_ID'),
         'secret_api_key' => env('REVENUECAT_SECRET_API_KEY'),
+        'secret' => env('REVENUECAT_SECRET'),
     ],
 
     'openweather' => [
         'api_key' => env('OPENWEATHER_API_KEY'),
     ],
-    // 'google' => [
-    //     'places_api_key' => env('GOOGLE_PLACES_API_KEY'),
-    // ],
 
     'openai' => [
         'api_key' => env('OPENAI_API_KEY'),

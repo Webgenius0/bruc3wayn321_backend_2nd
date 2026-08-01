@@ -11,6 +11,7 @@ Route::get('/', [DashboardController::class, 'home'])->name('home');
 
 Route::get('/privacy-policy', [PageController::class, 'privacyPolicy'])->name('frontend.privacy.policy');
 Route::get('/terms-and-conditions', [PageController::class, 'termsAndConditions'])->name('frontend.terms.conditions');
+Route::get('/support', [PageController::class, 'support'])->name('frontend.support');
 
 require __DIR__ . '/backend.php';
 require __DIR__ . '/settings.php';

@@ -24,6 +24,27 @@ class PageController extends Controller
         return $this->renderPage(Page::termsAndConditions());
     }
 
+    public function support(): Response
+    {
+        $page = Page::firstOrCreate(
+            ['slug' => 'support'],
+            [
+                'title' => 'Your Journey, Supported.',
+                'content' => 'Tell us what happened and our support team will help you get back to exploring meaningful places, stories, and routes.',
+                'status' => true,
+            ]
+        );
+
+        abort_unless($page->status, 404);
+
+        return Inertia::render('frontend/support', [
+            'page' => [
+                'title' => $page->title,
+                'content' => $page->content,
+            ],
+        ]);
+    }
+
     private function renderPage(Page $page): Response
     {
         abort_unless($page->status, 404);

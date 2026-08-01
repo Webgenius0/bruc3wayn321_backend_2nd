@@ -14,7 +14,8 @@ interface Props {
 }
 
 export default function Page({ page }: Props) {
-    const { data, setData, put, processing, errors } = useForm({
+    const isSupportPage = page.slug === 'support';
+    const { data, setData, processing, errors } = useForm({
         title: page.title || "",
         content: page.content || "",
         status: page.status,
@@ -44,14 +45,16 @@ export default function Page({ page }: Props) {
                     </h3>
 
                     <p className="fs-16">
-                        Update page content and settings.
+                        {isSupportPage
+                            ? 'Update the heading and introduction shown above the public support request form.'
+                            : 'Update page content and settings.'}
                     </p>
                 </div>
 
                 <form onSubmit={submit}>
                     <div className="mb-20">
                         <label className="label fs-16 mb-2">
-                            Title
+                            {isSupportPage ? 'Hero heading' : 'Title'}
                         </label>
 
                         <input
@@ -72,7 +75,7 @@ export default function Page({ page }: Props) {
 
                     <div className="mb-20">
                         <label className="label fs-16 mb-2">
-                            Content
+                            {isSupportPage ? 'Hero introduction' : 'Content'}
                         </label>
 
                         <EditorComponent

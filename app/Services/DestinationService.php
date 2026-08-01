@@ -37,7 +37,7 @@ class DestinationService
                     'query' => $request['search'] ?? 'popular places',
                     'tourist attractions, landmarks, parks, museums, beaches, viewpoints, historical places, hotels, resorts, restaurants, cafes, local food, shopping malls, markets, entertainment, theme parks, zoos, aquariums, cultural centers, art galleries',
                     'location' => "{$lat},{$lng}",
-                    'radius' => 5000,
+                    'radius' => 3000,
                     'key' => config('services.google.places_api_key'),
                 ]
             )->json();
@@ -58,9 +58,7 @@ class DestinationService
 
         return collect($results ?? [])
             ->map(function ($item) use ($savedPlaceIds) {
-
                 $photo = null;
-
                 if (!empty($item['photos'][0]['photo_reference'])) {
                     $photo =
                         "https://maps.googleapis.com/maps/api/place/photo"
@@ -68,7 +66,6 @@ class DestinationService
                         . "&photo_reference={$item['photos'][0]['photo_reference']}"
                         . "&key=" . config('services.google.places_api_key');
                 }
-
                 return [
                     'place_id' => $item['place_id'],
                     'title' => $item['name'],
@@ -102,8 +99,6 @@ class DestinationService
             now()->addDays(7),
             fn() => $this->getDestinationDetails($placeId)
         );
-
-
 
         $savedPlaceIds = auth()->check()
             ? UserDestination::where('user_id', auth()->id())

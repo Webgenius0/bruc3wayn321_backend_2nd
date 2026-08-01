@@ -47,11 +47,30 @@ class SubscriptionPlanController extends Controller
                 ]);
             }
 
+            $plans = collect($response->json('items', []))
+                ->flatMap(fn(array $offering) => $this->plansFromOffering($offering))
+                ->values();
+
+            // Products do not have to be assigned to an Offering. Show them as
+            // plans when the project has no Offering packages yet.
+            if ($plans->isEmpty()) {
+                $productsResponse = Http::baseUrl('https://api.revenuecat.com/v2')
+                    ->acceptJson()
+                    ->withToken($apiKey)
+                    ->timeout(15)
+                    ->get("/projects/{$projectId}/products", ['limit' => 100]);
+
+                if ($productsResponse->failed()) {
+                    report("RevenueCat products request failed with status {$productsResponse->status()}.");
+                } else {
+                    $plans = collect($productsResponse->json('items', []))
+                        ->map(fn(array $product) => $this->planFromProduct($product))
+                        ->values();
+                }
+            }
+
             return Inertia::render('backend/subscription-plans/index', [
-                'plans' => collect($response->json('items', []))
-                    ->flatMap(fn(array $offering) => $this->plansFromOffering($offering))
-                    ->values()
-                    ->all(),
+                'plans' => $plans->all(),
                 'connectionError' => null,
             ]);
         } catch (ConnectionException $exception) {
@@ -118,5 +137,26 @@ class SubscriptionPlanController extends Controller
             '$rc_lifetime', 'lifetime' => 'Lifetime',
             default => $lookupKey ?: '-',
         };
+    }
+
+    /** @return array<string, mixed> */
+    private function planFromProduct(array $product): array
+    {
+        $price = Arr::get($product, 'indicative_price');
+        $micros = (int) Arr::get($price, 'amount_micros', 0);
+
+        return [
+            'id' => $product['id'],
+            'name' => $product['display_name'] ?: $product['store_identifier'],
+            'price' => $micros > 0 ? number_format($micros / 1_000_000, 2) : null,
+            'currency' => Arr::get($price, 'currency'),
+            'duration' => $this->duration('', $product),
+            'type' => Arr::get($product, 'type', 'subscription'),
+            'bonus' => null,
+            'features' => [],
+            'is_active' => ($product['state'] ?? 'active') === 'active',
+            'offering_name' => 'Product catalog',
+            'product_identifier' => Arr::get($product, 'store_identifier'),
+        ];
     }
 }

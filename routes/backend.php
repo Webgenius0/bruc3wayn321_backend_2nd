@@ -10,6 +10,7 @@ use App\Http\Controllers\Web\Backend\Post\PostController;
 use App\Http\Controllers\Web\Backend\ProfileController;
 use App\Http\Controllers\Web\Backend\QueueController;
 use App\Http\Controllers\Web\Backend\SubscriptionPlanController;
+use App\Http\Controllers\Web\Backend\SupportIssueController;
 use App\Http\Controllers\Web\Backend\SystemSettingsController;
 use App\Http\Controllers\Web\Backend\UserController;
 use App\Http\Controllers\Web\Backend\NotificationController;
@@ -80,6 +81,10 @@ Route::middleware(['auth:sanctum', 'admin'])->prefix('admin')->group(function ()
     Route::delete('/failed-jobs/{id}', [QueueController::class, 'destroy'])->name('admin.failed-jobs.destroy');
 
     Route::get('/messages', [MessageController::class, 'index'])->name('admin.message.index');
+
+    Route::get('/support-issues', [SupportIssueController::class, 'index'])->name('admin.support-issues.index');
+    Route::get('/support-issues/{supportIssue}', [SupportIssueController::class, 'show'])->name('admin.support-issues.show');
+    Route::put('/support-issues/{supportIssue}/reply', [SupportIssueController::class, 'reply'])->name('admin.support-issues.reply');
 
 
     Route::get('/reports', [UserBlockReportAdminController::class, 'Reportindex'])->name('admin.report.index');

@@ -159,9 +159,10 @@ export default function SubscriptionPlans({ plans, connectionError }: Props) {
                                                 className="py-4 text-center"
                                                 colSpan={7}
                                             >
-                                                No RevenueCat packages found.
-                                                Add packages to an offering in
-                                                RevenueCat to show them here.
+                                                No RevenueCat products found.
+                                                Add products in RevenueCat, or
+                                                attach them to an Offering to
+                                                manage which plans are shown.
                                             </td>
                                         </tr>
                                     )}

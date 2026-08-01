@@ -31,7 +31,7 @@ class SendMessage implements ShouldBroadcastNow
     public function broadcastOn(): array
     {
         return [
-            new PrivateChannel('chat.' . $this->chat_id),
+            new Channel('chat.' . $this->chat_id),
         ];
     }
 }
