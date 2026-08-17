@@ -17,9 +17,14 @@ class SubscriptionApiController extends Controller
      */
     public function webhook(Request $request)
     {
-        $expected = 'Bearer ' . config('services.revenuecat.secret');
+        // dd("Ok");
+        $expected = config('services.revenuecat.secret');
 
-        // dd($expected, $request->header('Authorization'));
+        // Log::info('RevenueCat authorization check', [
+        //     'expected' => $expected,
+        //     'authorization' => $request->header('Authorization'),
+        // ]);
+
 
         // Log::info($request->all());
         // Log::info($expected);

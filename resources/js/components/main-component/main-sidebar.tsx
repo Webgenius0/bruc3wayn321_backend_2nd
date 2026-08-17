@@ -56,8 +56,8 @@ const items: MenuItem[] = [
         icon: 'material-symbols-outlined menu-icon',
     },
     {
-        title: 'Subscription Plans',
-        href: '/admin/subscription-plans',
+        title: 'User Subscription',
+        href: '/admin/subscriptions',
         icon_name: 'workspace_premium',
         icon: 'material-symbols-outlined menu-icon',
     },

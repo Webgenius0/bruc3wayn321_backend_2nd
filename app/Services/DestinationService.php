@@ -4,16 +4,29 @@ namespace App\Services;
 
 use App\Models\UserDestination;
 use App\Repositories\DestinationRepository;
-use App\Services\OpenWeatherService;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Log;
 
 class DestinationService
 {
+    /**
+     * SerpAPI base URL for Google Maps engine.
+     */
+    private const SERPAPI_URL = 'https://serpapi.com/search.json';
+
     public function __construct(
         protected DestinationRepository $destinationRepository
     ) {}
 
+    /**
+     * Search places list via SerpAPI Google Maps engine.
+     *
+     * @param array|null  $request  Incoming request params (e.g. ['search' => 'restaurants'])
+     * @param float       $lat      Latitude
+     * @param float       $lng      Longitude
+     * @param int         $items    Max number of results to return (capped at 100)
+     */
     public function list($request = null, float $lat, float $lng, $items = 100)
     {
         $savedPlaceIds = auth()->check()
@@ -22,76 +35,75 @@ class DestinationService
             ->toArray()
             : [];
 
-        // dd(config('services.google'));
         $search = $request['search'] ?? 'tourist attractions';
         $limit  = min((int)($items ?? 20), 100);
 
+        // SerpAPI Google Maps uses "ll" for GPS in the format "@lat,lng,zoom"
+        $ll = "@{$lat},{$lng},14z";
+
         $results = [];
+        $start   = 0;
 
-        for ($start = 0; $start < $limit; $start += 100) {
+        // SerpAPI paginates via "start" parameter (each page = 20 results)
+        while (count($results) < $limit) {
+            $response = Http::get(self::SERPAPI_URL, [
+                'engine'  => 'google_maps',
+                'q'       => $search,
+                'll'      => $ll,
+                'type'    => 'search',
+                'start'   => $start,
+                'api_key' => config('services.serpapi.key'),
+            ])->json();
 
+            $places = $response['local_results'] ?? [];
 
-            $response = Http::get(
-                'https://maps.googleapis.com/maps/api/place/textsearch/json',
-                [
-                    'query' => $request['search'] ?? 'popular places',
-                    'tourist attractions, landmarks, parks, museums, beaches, viewpoints, historical places, hotels, resorts, restaurants, cafes, local food, shopping malls, markets, entertainment, theme parks, zoos, aquariums, cultural centers, art galleries',
-                    'location' => "{$lat},{$lng}",
-                    'radius' => 3000,
-                    'key' => config('services.google.places_api_key'),
-                ]
-            )->json();
-
-            if (empty($response['results'])) {
+            if (empty($places)) {
                 break;
             }
 
-            $results = array_merge(
-                $results,
-                $response['results']
-            );
+            $results = array_merge($results, $places);
+            $start  += count($places);
 
-            // if (count($response['results']) < 20) {
-            //     break;
-            // }
+            // Stop if there's no next-page token
+            if (empty($response['serpapi_pagination']['next'])) {
+                break;
+            }
+
+            // Safety: avoid over-fetching
+            if ($start >= $limit) {
+                break;
+            }
         }
 
-        return collect($results ?? [])
+        return collect(array_slice($results, 0, $limit))
             ->map(function ($item) use ($savedPlaceIds) {
-                $photo = null;
-                if (!empty($item['photos'][0]['photo_reference'])) {
-                    $photo =
-                        "https://maps.googleapis.com/maps/api/place/photo"
-                        . "?maxwidth=1200"
-                        . "&photo_reference={$item['photos'][0]['photo_reference']}"
-                        . "&key=" . config('services.google.places_api_key');
-                }
+                $thumbnail = $item['thumbnail'] ?? null;
+                $placeId   = $item['place_id'] ?? null;
+
                 return [
-                    'place_id' => $item['place_id'],
-                    'title' => $item['name'],
-                    'subtitle' => $item['formatted_address'] ?? '',
-                    'description' => $item['formatted_address'] ?? '',
-                    'rating' => isset($item['rating'])
+                    'place_id'    => $placeId,
+                    'title'       => $item['title'] ?? '',
+                    'subtitle'    => $item['address'] ?? '',
+                    'description' => $item['address'] ?? '',
+                    'rating'      => isset($item['rating'])
                         ? (string) $item['rating']
                         : '0',
-                    'image' => $photo,
-                    'latitude' => isset($item['geometry']['location']['lat'])
-                        ? (string) $item['geometry']['location']['lat']
+                    'image'       => $thumbnail,
+                    'latitude'    => isset($item['gps_coordinates']['latitude'])
+                        ? (string) $item['gps_coordinates']['latitude']
                         : null,
-
-                    'longitude' => isset($item['geometry']['location']['lng'])
-                        ? (string) $item['geometry']['location']['lng']
+                    'longitude'   => isset($item['gps_coordinates']['longitude'])
+                        ? (string) $item['gps_coordinates']['longitude']
                         : null,
-                    // Saved status
-                    'is_saved' => in_array(
-                        $item['place_id'],
-                        $savedPlaceIds
-                    ),
+                    'is_saved'    => in_array($placeId, $savedPlaceIds),
                 ];
             })
             ->values();
     }
 
+    /**
+     * Get destination details (with 7-day cache) and attach saved status.
+     */
     public function details(string $placeId)
     {
         $destination = Cache::remember(
@@ -106,114 +118,106 @@ class DestinationService
             ->toArray()
             : [];
 
-        $destination['is_saved'] = in_array(
-            $placeId,
-            $savedPlaceIds
-        );
+        $destination['is_saved'] = in_array($placeId, $savedPlaceIds);
 
         return $destination;
     }
 
+    /**
+     * Fetch place details via SerpAPI Google Maps (type=place).
+     * Returned shape is lighter — suitable for a quick detail card.
+     */
     public function getDetails(string $placeId)
     {
-        $response = Http::get(
-            'https://maps.googleapis.com/maps/api/place/details/json',
-            [
-                'place_id' => $placeId,
-                'key' => config('services.google.places_api_key'),
-            ]
-        )->json();
-        $place = $response['result'] ?? [];
-        $photo = null;
-
-        if (!empty($place['photos'][0]['photo_reference'])) {
-            $photo =
-                "https://maps.googleapis.com/maps/api/place/photo"
-                . "?maxwidth=1200"
-                . "&photo_reference={$place['photos'][0]['photo_reference']}"
-                . "&key=" . config('services.google.places_api_key');
-        }
+        $place = $this->fetchPlaceFromSerpApi($placeId);
 
         return [
-            'place_id' => $place['place_id'] ?? null,
-            'name' => $place['name'] ?? '',
-            'description' => $place['editorial_summary']['overview']
-                ?? $place['formatted_address']
-                ?? '',
-            'image' => $photo,
-            'rating' => isset($place['rating'])
+            'place_id'    => $placeId,
+            'name'        => $place['title'] ?? '',
+            'description' => $place['description'] ?? $place['address'] ?? '',
+            'image'       => $place['images'][0]['image'] ?? $place['thumbnail'] ?? null,
+            'rating'      => isset($place['rating'])
                 ? (string) $place['rating']
                 : '0',
-            // 'address' => $place['formatted_address'] ?? '',
-            // 'phone' => $place['formatted_phone_number'] ?? '',
-            'website' => $place['website'] ?? '',
-            'latitude' => isset($place['geometry']['location']['lat'])
-                ? (string) $place['geometry']['location']['lat']
+            'website'     => $place['website'] ?? '',
+            'latitude'    => isset($place['gps_coordinates']['latitude'])
+                ? (string) $place['gps_coordinates']['latitude']
                 : null,
-            'longitude' => isset($place['geometry']['location']['lng'])
-                ? (string) $place['geometry']['location']['lng']
+            'longitude'   => isset($place['gps_coordinates']['longitude'])
+                ? (string) $place['gps_coordinates']['longitude']
                 : null,
-            // Mock values for UI
+            // Placeholder values for UI display
             'cost_of_living' => '',
-            'visa' => '',
-            'food' => '',
-            'culture' => '',
-            'transport' => '',
-            'safety' => '',
+            'visa'           => '',
+            'food'           => '',
+            'culture'        => '',
+            'transport'      => '',
+            'safety'         => '',
         ];
     }
 
-
+    /**
+     * Fetch full destination details via SerpAPI — used for the cached version.
+     */
     public function getDestinationDetails(string $placeId)
     {
-        $response = Http::get(
-            'https://maps.googleapis.com/maps/api/place/details/json',
-            [
-                'place_id' => $placeId,
-                'key' => config('services.google.places_api_key'),
-            ]
-        )->json();
-
-        $place = $response['result'] ?? [];
-
-        $photo = null;
-
-        if (!empty($place['photos'][0]['photo_reference'])) {
-            $photo =
-                "https://maps.googleapis.com/maps/api/place/photo"
-                . "?maxwidth=1200"
-                . "&photo_reference={$place['photos'][0]['photo_reference']}"
-                . "&key=" . config('services.google.places_api_key');
-        }
-
+        $place = $this->fetchPlaceFromSerpApi($placeId);
 
         return [
-            'place_id' => $place['place_id'] ?? null,
-            'name' => $place['name'] ?? '',
-            'description' => $place['editorial_summary']['overview']
-                ?? $place['formatted_address']
-                ?? '',
-            'image' => $photo,
-            'rating' => isset($place['rating'])
+            'place_id'    => $placeId,
+            'name'        => $place['title'] ?? '',
+            'description' => $place['description'] ?? $place['address'] ?? '',
+            'image'       => $place['images'][0]['image'] ?? $place['thumbnail'] ?? null,
+            'rating'      => isset($place['rating'])
                 ? (string) $place['rating']
                 : '0',
-            'address' => $place['formatted_address'] ?? '',
-            'phone' => $place['formatted_phone_number'] ?? '',
-            'website' => $place['website'] ?? '',
-            'latitude' => isset($place['geometry']['location']['lat'])
-                ? (string) $place['geometry']['location']['lat']
+            'address'     => $place['address'] ?? '',
+            'phone'       => $place['phone'] ?? '',
+            'website'     => $place['website'] ?? '',
+            'latitude'    => isset($place['gps_coordinates']['latitude'])
+                ? (string) $place['gps_coordinates']['latitude']
                 : null,
-            'longitude' => isset($place['geometry']['location']['lng'])
-                ? (string) $place['geometry']['location']['lng']
+            'longitude'   => isset($place['gps_coordinates']['longitude'])
+                ? (string) $place['gps_coordinates']['longitude']
                 : null,
-
-            // Mock values for UI
+            // Placeholder values for UI display
             'cost_of_living' => '',
-            'visa' => '',
-            'food' => '',
-            'culture' => '',
-            'transport' => '',
-            'safety' => '',
+            'visa'           => '',
+            'food'           => '',
+            'culture'        => '',
+            'transport'      => '',
+            'safety'         => '',
         ];
+    }
+
+    // -------------------------------------------------------------------------
+    // Private helpers
+    // -------------------------------------------------------------------------
+
+    /**
+     * Call SerpAPI with engine=google_maps and type=place to retrieve a single
+     * place's details by its place_id.
+     *
+     * @return array Raw place data from SerpAPI response
+     */
+    private function fetchPlaceFromSerpApi(string $placeId): array
+    {
+        try {
+            $response = Http::get(self::SERPAPI_URL, [
+                'engine'   => 'google_maps',
+                'type'     => 'place',
+                'place_id' => $placeId,
+                'api_key'  => config('services.serpapi.key'),
+            ])->json();
+
+            return $response['place_results'] ?? [];
+        } catch (\Throwable $e) {
+            Log::error('SerpAPI place details error', [
+                'place_id' => $placeId,
+                'error'    => $e->getMessage(),
+            ]);
+
+            return [];
+        }
     }
 }

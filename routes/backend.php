@@ -21,7 +21,7 @@ Route::middleware(['auth:sanctum', 'admin'])->prefix('admin')->group(function ()
 
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('admin.dashboard.index');
     Route::get('/notifications', [NotificationController::class, 'index'])->name('admin.notifications.index');
-    Route::get('/subscription-plans', [SubscriptionPlanController::class, 'index'])->name('admin.subscription-plans.index');
+    Route::get('/subscriptions', [SubscriptionPlanController::class, 'index'])->name('admin.subscription.index');
 
     // User APIs controller 
     Route::get('/users', [UserController::class, 'index'])->name('admin.user.index');

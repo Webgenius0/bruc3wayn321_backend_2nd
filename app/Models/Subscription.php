@@ -24,4 +24,9 @@ class Subscription extends Model
         'expires_at' => 'datetime',
         'will_renew' => 'boolean',
     ];
+
+    public function user()
+    {
+        return $this->belongsTo(User::class);
+    }
 }

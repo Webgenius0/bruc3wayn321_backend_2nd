@@ -34,6 +34,11 @@ class GoogleTranslateService
                 . config('services.google_translate.api_key'),
             $payload
         );
+        dd(
+            $response->status(),
+            $response->body(),
+            $response->json()
+        );
 
         if ($response->failed()) {
             throw new RuntimeException(
