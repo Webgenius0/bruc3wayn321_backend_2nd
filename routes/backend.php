@@ -9,6 +9,7 @@ use App\Http\Controllers\Web\Backend\MessageController;
 use App\Http\Controllers\Web\Backend\Post\PostController;
 use App\Http\Controllers\Web\Backend\ProfileController;
 use App\Http\Controllers\Web\Backend\QueueController;
+use App\Http\Controllers\Web\Backend\SubscriptionLimitController;
 use App\Http\Controllers\Web\Backend\SubscriptionPlanController;
 use App\Http\Controllers\Web\Backend\SupportIssueController;
 use App\Http\Controllers\Web\Backend\SystemSettingsController;
@@ -22,6 +23,15 @@ Route::middleware(['auth:sanctum', 'admin'])->prefix('admin')->group(function ()
     Route::get('/dashboard', [DashboardController::class, 'index'])->name('admin.dashboard.index');
     Route::get('/notifications', [NotificationController::class, 'index'])->name('admin.notifications.index');
     Route::get('/subscriptions', [SubscriptionPlanController::class, 'index'])->name('admin.subscription.index');
+
+    // Subscription Limits Management
+    Route::get('/subscription-limits', [SubscriptionLimitController::class, 'index'])->name('admin.subscription-limits.index');
+    Route::post('/subscription-limits/limits', [SubscriptionLimitController::class, 'updateLimits'])->name('admin.subscription-limits.update-limits');
+    Route::post('/subscription-limits/trial-settings', [SubscriptionLimitController::class, 'updateTrialSettings'])->name('admin.subscription-limits.trial-settings');
+    Route::get('/subscription-limits/users', [SubscriptionLimitController::class, 'userUsage'])->name('admin.subscription-limits.users');
+    Route::post('/subscription-limits/{userId}/reset-usage', [SubscriptionLimitController::class, 'resetUsage'])->name('admin.subscription-limits.reset-usage');
+    Route::post('/subscription-limits/{userId}/force-upgrade', [SubscriptionLimitController::class, 'forceUpgrade'])->name('admin.subscription-limits.force-upgrade');
+    Route::post('/subscription-limits/{userId}/force-downgrade', [SubscriptionLimitController::class, 'forceDowngrade'])->name('admin.subscription-limits.force-downgrade');
 
     // User APIs controller 
     Route::get('/users', [UserController::class, 'index'])->name('admin.user.index');

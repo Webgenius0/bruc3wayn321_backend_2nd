@@ -61,6 +61,12 @@ const items: MenuItem[] = [
         icon_name: 'workspace_premium',
         icon: 'material-symbols-outlined menu-icon',
     },
+    {
+        title: 'Subscription Limits',
+        href: '/admin/subscription-limits',
+        icon_name: 'tune',
+        icon: 'material-symbols-outlined menu-icon',
+    },
 
 
     {

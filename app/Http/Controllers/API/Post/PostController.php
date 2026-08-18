@@ -129,9 +129,22 @@ class PostController extends Controller
      */
     public function store(PostStoreRequest $request)
     {
+        $user = $request->user();
+
+        // Check post creation limit
+        if (!$user->canPerformAction('posts')) {
+            return $this->errorResponse(
+                'You have reached your community post limit. Please upgrade to a paid subscription for unlimited posts.',
+                429
+            );
+        }
+
         $post = $this->service->create($request->validated());
 
-        return $this->successResponse('Post create successfully', new PostResource($post));
+        // Increment post count
+        $user->incrementUsage('posts');
+
+        return $this->successResponse('Post created successfully', new PostResource($post));
     }
 
     /**

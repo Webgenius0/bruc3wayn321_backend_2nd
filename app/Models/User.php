@@ -3,9 +3,6 @@
 namespace App\Models;
 
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
-use Database\Factories\UserFactory;
-use Illuminate\Database\Eloquent\Attributes\Fillable;
-use Illuminate\Database\Eloquent\Attributes\Hidden;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
@@ -19,7 +16,6 @@ use Laravel\Sanctum\HasApiTokens;
 // #[Hidden(['password', 'two_factor_secret', 'two_factor_recovery_codes', 'remember_token'])]
 class User extends Authenticatable implements PasskeyUser
 {
-    /** @use HasFactory<UserFactory> */
     use HasFactory, Notifiable, PasskeyAuthenticatable, TwoFactorAuthenticatable, HasApiTokens;
 
     protected $fillable = [
@@ -170,5 +166,267 @@ class User extends Authenticatable implements PasskeyUser
     public function getFollowingCount(): int
     {
         return $this->following()->count();
+    }
+
+    protected $appends = [
+        'is_subscribed',
+    ];
+
+    public function subscriptions()
+    {
+        return $this->hasMany(Subscription::class);
+    }
+
+    public function getIsSubscribedAttribute(): bool
+    {
+        return $this->subscriptions()
+            ->where('status', 'active')
+            ->where(function ($query) {
+                $query->whereNull('expires_at')
+                    ->orWhere('expires_at', '>', now())
+                    ->orWhere(function ($q) {
+                        $q->where('type', 'free')
+                            ->whereNull('free_expires_at')
+                            ->orWhere('free_expires_at', '>', now());
+                    });
+            })
+            ->exists();
+    }
+
+    /**
+     * Get the current subscription (paid or free).
+     */
+    public function getActiveSubscriptionAttribute(): ?Subscription
+    {
+        return $this->subscriptions()
+            ->where('status', 'active')
+            ->where(function ($query) {
+                $query->where(function ($q) {
+                    $q->where('type', '!=', 'free')
+                        ->where(function ($inner) {
+                            $inner->whereNull('expires_at')
+                                ->orWhere('expires_at', '>', now());
+                        });
+                })->orWhere(function ($q) {
+                    $q->where('type', 'free')
+                        ->where(function ($inner) {
+                            $inner->whereNull('free_expires_at')
+                                ->orWhere('free_expires_at', '>', now());
+                        });
+                });
+            })
+            ->first();
+    }
+
+    /**
+     * Check if user has a free subscription (freemium or active trial).
+     */
+    public function hasFreeSubscription(): bool
+    {
+        return (bool) $this->activeFreeSubscription;
+    }
+
+    public function getActiveFreeSubscriptionAttribute(): ?Subscription
+    {
+        return $this->subscriptions()
+            ->where('type', 'free')
+            ->where('status', 'active')
+            ->where(function ($query) {
+                $query->whereNull('free_expires_at')
+                    ->orWhere('free_expires_at', '>', now());
+            })
+            ->first();
+    }
+
+    /**
+     * Check if user has a paid subscription via RevenueCat.
+     */
+    public function hasPaidSubscription(): bool
+    {
+        return (bool) $this->activePaidSubscription;
+    }
+
+    public function getActivePaidSubscriptionAttribute(): ?Subscription
+    {
+        return $this->subscriptions()
+            ->where('type', 'revenuecat')
+            ->where('status', 'active')
+            ->where(function ($query) {
+                $query->whereNull('expires_at')
+                    ->orWhere('expires_at', '>', now());
+            })
+            ->first();
+    }
+
+    /**
+     * Check if user has already used their free trial.
+     */
+    public function hasUsedFreeTrial(): bool
+    {
+        return (bool) $this->subscriptions()
+            ->where('type', 'free')
+            ->where('trial_type', 'free_trial')
+            ->exists();
+    }
+
+    /**
+     * Check if user is eligible for a free trial.
+     */
+    public function isEligibleForFreeTrial(): bool
+    {
+        return !$this->hasUsedFreeTrial();
+    }
+
+    /**
+     * Get usage limits for the user's current tier.
+     */
+    public function getTierLimits(): array
+    {
+        if ($this->hasPaidSubscription()) {
+            return config('subscription.tiers.paid');
+        }
+
+        return config('subscription.tiers.free');
+    }
+
+    /**
+     * Get or create usage record for a specific type and period.
+     */
+    public function getUsageLimit(string $type, ?string $periodStart = null): UsageLimit
+    {
+        $period = $periodStart ?? now()->format('Y-m-01'); // Monthly for paid
+
+        return UsageLimit::firstOrCreate(
+            [
+                'user_id' => $this->id,
+                'type' => $type,
+                'period_start' => $period,
+            ],
+            [
+                'limit' => $this->getLimitForType($type),
+                'current_count' => 0,
+            ]
+        );
+    }
+
+    /**
+     * Get the limit value for a specific usage type.
+     */
+    protected function getLimitForType(string $type): int
+    {
+        $limits = $this->getTierLimits();
+
+        return match ($type) {
+            'ai_chat' => $limits['ai_chat_messages'] ?? 0,
+            'ai_voice' => $limits['ai_voice_requests'] ?? 0,
+            'posts' => $limits['community_posts'] ?? 0,
+            default => 0,
+        };
+    }
+
+    /**
+     * Update existing usage limits based on current tier.
+     * Call this when the user upgrades or downgrades.
+     */
+    public function updateUsageLimits(): void
+    {
+        $period = now()->format('Y-m-01');
+        $types = ['ai_chat', 'ai_voice', 'posts'];
+
+        foreach ($types as $type) {
+            UsageLimit::where('user_id', $this->id)
+                ->where('type', $type)
+                ->where('period_start', $period)
+                ->update(['limit' => $this->getLimitForType($type)]);
+        }
+    }
+
+    /**
+     * Check if user can perform an action without exceeding limits.
+     */
+    public function canPerformAction(string $type): bool
+    {
+        $limitRecord = $this->getUsageLimit($type);
+
+        // No limit set (unlimited)
+        if ($limitRecord->limit >= 99999) {
+            return true;
+        }
+
+        return $limitRecord->current_count < $limitRecord->limit;
+    }
+
+    /**
+     * Increment usage count for a specific type.
+     */
+    public function incrementUsage(string $type): UsageLimit
+    {
+        $limitRecord = $this->getUsageLimit($type);
+
+        // Don't increment if already at limit
+        if ($limitRecord->current_count >= $limitRecord->limit && $limitRecord->limit < 99999) {
+            return $limitRecord;
+        }
+
+        $limitRecord->current_count = min($limitRecord->current_count + 1, $limitRecord->limit);
+        $limitRecord->save();
+
+        return $limitRecord;
+    }
+
+    /**
+     * Decrement usage count (for refunds/cancellations).
+     */
+    public function decrementUsage(string $type, int $amount = 1): UsageLimit
+    {
+        $limitRecord = $this->getUsageLimit($type);
+        $limitRecord->current_count = max(0, $limitRecord->current_count - $amount);
+        $limitRecord->save();
+
+        return $limitRecord;
+    }
+
+    /**
+     * Get remaining quota for a specific type.
+     */
+    public function getRemainingQuota(string $type): int
+    {
+        $limitRecord = $this->getUsageLimit($type);
+        $remaining = $limitRecord->limit - $limitRecord->current_count;
+
+        return max(0, $remaining);
+    }
+
+    /**
+     * Get all usage statistics for the user.
+     */
+    public function getUsageStats(): array
+    {
+        return [
+            'ai_chat' => [
+                'used' => $this->getUsageLimit('ai_chat')->current_count,
+                'limit' => $this->getUsageLimit('ai_chat')->limit,
+                'remaining' => $this->getRemainingQuota('ai_chat'),
+                'percentage_used' => $this->getUsageLimit('ai_chat')->limit > 0
+                    ? round(($this->getUsageLimit('ai_chat')->current_count / $this->getUsageLimit('ai_chat')->limit) * 100, 2)
+                    : 0,
+            ],
+            'ai_voice' => [
+                'used' => $this->getUsageLimit('ai_voice')->current_count,
+                'limit' => $this->getUsageLimit('ai_voice')->limit,
+                'remaining' => $this->getRemainingQuota('ai_voice'),
+                'percentage_used' => $this->getUsageLimit('ai_voice')->limit > 0
+                    ? round(($this->getUsageLimit('ai_voice')->current_count / $this->getUsageLimit('ai_voice')->limit) * 100, 2)
+                    : 0,
+            ],
+            'posts' => [
+                'used' => $this->getUsageLimit('posts')->current_count,
+                'limit' => $this->getUsageLimit('posts')->limit,
+                'remaining' => $this->getRemainingQuota('posts'),
+                'percentage_used' => $this->getUsageLimit('posts')->limit > 0
+                    ? round(($this->getUsageLimit('posts')->current_count / $this->getUsageLimit('posts')->limit) * 100, 2)
+                    : 0,
+            ],
+        ];
     }
 }

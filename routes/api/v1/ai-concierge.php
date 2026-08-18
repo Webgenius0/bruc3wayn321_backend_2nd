@@ -5,7 +5,7 @@ use Illuminate\Support\Facades\Route;
 
 Route::controller(AiConciergeController::class)
     ->prefix('ai-concierge')
-    ->middleware(['auth:sanctum'])
+    ->middleware(['auth:sanctum', 'subscription:any'])
     ->group(function () {
         Route::get('conversations', 'index');
         Route::get('conversations/{conversation}', 'show');

@@ -40,13 +40,8 @@ class AiConciergeController extends Controller
         if ($conversation->user_id !== $request->user()->id) {
             return $this->errorResponse('Conversation not found', 404);
         }
-
         // $chat = AiMessage::where($conversation->id);
-
-        
         $conversation->load('messages');
-        
-
         return $this->successResponse('Conversation details', $conversation);
     }
 
@@ -59,25 +54,36 @@ class AiConciergeController extends Controller
         $validator = Validator::make($request->all(), [
             'message' => 'required|string|max:2000',
             'conversation_id' => 'nullable|integer|exists:ai_conversations,id',
+            'type' => 'required|in:ai_chat,ai_voice',
         ]);
 
         if ($validator->fails()) {
             return $this->errorResponse('Validation failed', 422, $validator->errors());
         }
 
-        $user = $request->user();
         $validated = $validator->validated();
+        $user = $request->user();
+        /* Check Usage Limit */
+        if (!$user->canPerformAction($validated['type'])) {
+            $message = $validated['type'] === 'ai_voice'
+                ? 'You have reached your monthly AI voice chat limit. Please upgrade to a paid subscription for more messages.'
+                : 'You have reached your monthly AI chat limit. Please upgrade to a paid subscription for more messages.';
+            return $this->errorResponse($message, 429);
+        }
 
-        // Get or create conversation
+        /*
+        |--------------------------------------------------------------------------
+        | Get or Create Conversation
+        |--------------------------------------------------------------------------
+        */
+
         if (!empty($validated['conversation_id'])) {
-            $conversation = AiConversation::where('id', $validated['conversation_id'])
-                ->where('user_id', $user->id)
-                ->first();
-
+            $conversation = AiConversation::where('id', $validated['conversation_id'])->where('user_id', $user->id)->first();
             if (!$conversation) {
                 return $this->errorResponse('Conversation not found', 404);
             }
         } else {
+
             $conversation = AiConversation::create([
                 'user_id' => $user->id,
             ]);
@@ -85,17 +91,11 @@ class AiConciergeController extends Controller
 
         try {
             $assistantMessage = $this->service->chat($conversation, $validated['message']);
-
-            return $this->successResponse('Message sent', [
-                'conversation_id' => $conversation->id,
-                'conversation_title' => $conversation->fresh()->title,
-                'message' => $assistantMessage,
-            ]);
+            $user->incrementUsage($validated['type']);
+            return $this->successResponse('Message sent', ['conversation_id' => $conversation->id, 'conversation_title' => $conversation->fresh()->title, 'message' => $assistantMessage]);
+            
         } catch (\Exception $e) {
-            return $this->errorResponse(
-                'Failed to get AI response: ' . $e->getMessage(),
-                500
-            );
+            return $this->errorResponse('Failed to get AI response: ' . $e->getMessage(), 500);
         }
     }
 
@@ -134,7 +134,7 @@ class AiConciergeController extends Controller
             // 1. Transcribe the uploaded audio
             $audioFile = $request->file('audio');
             $userText = $this->service->transcribeAudio(
-                $audioFile->getPathname(), 
+                $audioFile->getPathname(),
                 $audioFile->getClientOriginalName()
             );
 
@@ -144,10 +144,7 @@ class AiConciergeController extends Controller
 
             // 2. Get or create conversation
             if (!empty($validated['conversation_id'])) {
-                $conversation = AiConversation::where('id', $validated['conversation_id'])
-                    ->where('user_id', $user->id)
-                    ->first();
-
+                $conversation = AiConversation::where('id', $validated['conversation_id'])->where('user_id', $user->id)->first();
                 if (!$conversation) {
                     return $this->errorResponse('Conversation not found', 404);
                 }
@@ -163,6 +160,9 @@ class AiConciergeController extends Controller
             // 4. Convert AI text response to speech
             $audioUrl = $this->service->textToSpeech($assistantMessage->content);
 
+            // Increment usage counts
+            $user->incrementUsage('ai_voice');
+
             return $this->successResponse('Voice message processed', [
                 'conversation_id' => $conversation->id,
                 'conversation_title' => $conversation->fresh()->title,
@@ -170,7 +170,6 @@ class AiConciergeController extends Controller
                 'ai_message' => $assistantMessage,
                 'ai_audio_url' => $audioUrl,
             ]);
-
         } catch (\Exception $e) {
             return $this->errorResponse(
                 'Failed to process voice chat: ' . $e->getMessage(),

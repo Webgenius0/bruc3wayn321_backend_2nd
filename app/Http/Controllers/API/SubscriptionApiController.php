@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\API;
 
+use App\Concerns\ApiResponse;
 use App\Http\Controllers\Controller;
 use App\Models\RevenuecatEvent;
 use App\Models\Subscription;
@@ -12,6 +13,7 @@ use Illuminate\Support\Facades\Log;
 
 class SubscriptionApiController extends Controller
 {
+    use ApiResponse;
     /**
      * RevenueCat Webhook
      */
@@ -61,16 +63,15 @@ class SubscriptionApiController extends Controller
                 'message' => 'User not found'
             ], 404);
         }
-        $isFreePlan = in_array($event['type'], [
-            'EXPIRATION',
-            'REFUND',
-        ]);
 
-        Subscription::updateOrCreate(
+        // Always update the user's single subscription record.
+        // type transitions: free → revenuecat on upgrade, revenuecat → free on downgrade.
+        $subscription = Subscription::updateOrCreate(
             [
                 'user_id' => $user->id,
             ],
             [
+                'type' => 'revenuecat',
                 'store' => $event['store'] ?? null,
                 'product_id' => $event['product_id'] ?? null,
                 'entitlement' => $event['entitlement_ids'][0] ?? null,
@@ -100,19 +101,47 @@ class SubscriptionApiController extends Controller
             ]
         );
 
+        $user->updateUsageLimits();
+
         return response()->json([
             'success' => true
         ]);
     }
 
     /**
-     * Current subscription
+     * Current subscription (free + RevenueCat)
      */
     public function show(Request $request)
     {
-        return response()->json(
-            Subscription::where('user_id', $request->user()->id)->first()
-        );
+        $user = $request->user();
+
+        $freeSubscription = $user->subscriptions()
+            ->where('type', 'free')
+            ->where('status', 'active')
+            ->where(function ($query) {
+                $query->whereNull('free_expires_at')
+                    ->orWhere('free_expires_at', '>', now());
+            })
+            ->first();
+
+        $paidSubscription = $user->subscriptions()
+            ->where('type', 'revenuecat')
+            ->where('status', 'active')
+            ->where(function ($query) {
+                $query->whereNull('expires_at')
+                    ->orWhere('expires_at', '>', now());
+            })
+            ->first();
+
+        return response()->json([
+            'is_subscribed' => $user->is_subscribed,
+            'free_subscription' => $freeSubscription,
+            'paid_subscription' => $paidSubscription,
+            'has_used_free_trial' => $user->has_used_free_trial,
+            'eligible_for_free_trial' => $user->isEligibleForFreeTrial(),
+            'usage_stats' => $user->getUsageStats(),
+            'tier' => $user->hasPaidSubscription() ? 'paid' : 'free',
+        ]);
     }
 
     /**
@@ -126,15 +155,17 @@ class SubscriptionApiController extends Controller
     }
 
     /**
-     * Cancel subscription
+     * Cancel paid subscription
      */
     public function cancel(Request $request)
     {
-        $subscription = Subscription::where('user_id', $request->user()->id)->first();
+        $subscription = Subscription::where('user_id', $request->user()->id)
+            ->where('type', 'revenuecat')
+            ->first();
 
         if (!$subscription) {
             return response()->json([
-                'message' => 'No subscription found.'
+                'message' => 'No paid subscription found.'
             ], 404);
         }
 
@@ -153,6 +184,250 @@ class SubscriptionApiController extends Controller
         return response()->json([
             'store' => $subscription->store,
             'manage_url' => $url,
+        ]);
+    }
+
+    /**
+     * Activate a free subscription (freemium).
+     * Users can activate this at any time. No expiration or trial_type needed.
+     */
+    public function activateFree(Request $request)
+    {
+        $subscription = $request->user()->subscriptions()->firstOrCreate(
+            ['user_id' => $request->user()->id],
+            [
+                'type' => 'free',
+                'store' => 'INTERNAL',
+                'product_id' => 'free',
+                'entitlement' => 'free',
+                'status' => 'active',
+                'purchase_date' => now(),
+                'expires_at' => now()->addDays(7),
+                'free_expires_at' => now()->addDays(7),
+                'trial_type' => null,
+                'will_renew' => false,
+            ]
+        );
+
+        $request->user()->updateUsageLimits();
+
+        return response()->json([
+            'success' => true,
+            'subscription' => $subscription->load('user'),
+        ]);
+    }
+
+    /**
+     * Activate a free trial.
+     * Only users who haven't used a trial before can activate.
+     */
+    public function activateFreeTrial(Request $request)
+    {
+        // Check if user already used a free trial
+        if ($request->user()->hasUsedFreeTrial()) {
+            return response()->json([
+                'message' => 'You have already used your free trial.',
+                'success' => false,
+            ], 400);
+        }
+
+        // Check if user already has an active subscription (paid or free)
+        if ($request->user()->is_subscribed) {
+            return response()->json([
+                'message' => 'You already have an active subscription.',
+                'success' => false,
+            ], 400);
+        }
+
+        // Default trial duration: 7 days (can be configurable)
+        $trialDuration = config('subscription.free_trial_days', 7);
+
+        $subscription = Subscription::firstOrCreate(
+            ['user_id' => $request->user()->id],
+            [
+                'type' => 'free',
+                'store' => 'INTERNAL',
+                'product_id' => 'free_trial',
+                'entitlement' => 'free_trial',
+                'status' => 'active',
+                'purchase_date' => now(),
+                'expires_at' => null,
+                'free_expires_at' => now()->addDays($trialDuration),
+                'trial_type' => 'free_trial',
+                'will_renew' => false,
+            ]
+        );
+
+        $request->user()->updateUsageLimits();
+
+        return response()->json([
+            'success' => true,
+            'subscription' => $subscription->load('user'),
+            'trial_duration_days' => $trialDuration,
+            'expires_at' => $subscription->free_expires_at,
+        ]);
+    }
+
+    /**
+     * Check free trial eligibility and status.
+     */
+    public function checkTrial(Request $request)
+    {
+        $user = $request->user();
+
+        $hasFreeTrial = $user->hasUsedFreeTrial();
+        $activeFree = $user->active_free_subscription;
+
+        // Check if free trial expired
+        $trialExpired = false;
+        if ($hasFreeTrial && !$activeFree) {
+            $trialExpired = true;
+        }
+
+        return response()->json([
+            'eligible' => $user->isEligibleForFreeTrial(),
+            'has_used_trial' => $hasFreeTrial,
+            'trial_expired' => $trialExpired,
+            'active_free_subscription' => $activeFree ? $activeFree : null,
+            'can_activate_free_trial' => $user->isEligibleForFreeTrial() && !$user->is_subscribed,
+        ]);
+    }
+
+    /**
+     * Extend free trial (admin only).
+     */
+    public function extendFreeTrial(Request $request)
+    {
+        $request->validate([
+            'user_id' => 'required|exists:users,id',
+            'days' => 'required|integer|min:1|max:365',
+        ]);
+
+        $user = User::findOrFail($request->user_id);
+        $days = $request->days;
+
+        $subscription = $user->subscriptions()
+            ->where('type', 'free')
+            ->where('status', 'active')
+            ->first();
+
+        if (!$subscription) {
+            // Create a new free trial subscription
+            $subscription = Subscription::create([
+                'user_id' => $user->id,
+                'type' => 'free',
+                'store' => 'INTERNAL',
+                'product_id' => 'free_trial',
+                'entitlement' => 'free_trial',
+                'status' => 'active',
+                'purchase_date' => now(),
+                'expires_at' => null,
+                'free_expires_at' => now()->addDays($days),
+                'trial_type' => 'free_trial',
+                'will_renew' => false,
+            ]);
+        } else {
+            // Extend existing free subscription
+            $currentExpiry = $subscription->free_expires_at ?? now();
+            $subscription->update([
+                'free_expires_at' => $currentExpiry->addDays($days),
+            ]);
+        }
+
+        $user->updateUsageLimits();
+
+        return response()->json([
+            'success' => true,
+            'subscription' => $subscription->load('user'),
+            'extended_until' => $subscription->free_expires_at,
+        ]);
+    }
+
+    /**
+     * Deactivate free subscription (only free can deactivate free).
+     */
+    public function deactivateFree(Request $request)
+    {
+        $subscription = $request->user()->subscriptions()
+            ->where('type', 'free')
+            ->where('status', 'active')
+            ->first();
+
+        if (!$subscription) {
+            return response()->json([
+                'message' => 'No active free subscription found.',
+            ], 404);
+        }
+
+        $subscription->update(['status' => 'cancelled', 'free_expires_at' => now()]);
+
+        $request->user()->updateUsageLimits();
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Free subscription deactivated.',
+        ]);
+    }
+
+    /**
+     * Get detailed usage statistics for the authenticated user.
+     */
+    public function usageStats(Request $request)
+    {
+        $user = $request->user();
+
+        return $this->successResponse('Usage Statstics', [
+            'tier' => $user->hasPaidSubscription() ? 'paid' : 'free',
+            'limits' => $user->getTierLimits(),
+            'usage' => $user->getUsageStats(),
+        ]);
+    }
+
+    /**
+     * Force upgrade user to paid tier (API - admin only).
+     */
+    public function forceUpgrade(Request $request, int $userId)
+    {
+        $user = User::findOrFail($userId);
+
+        Subscription::updateOrCreate(
+            ['user_id' => $userId],
+            [
+                'type' => 'revenuecat',
+                'store' => 'INTERNAL',
+                'product_id' => 'paid_override',
+                'entitlement' => 'paid',
+                'status' => 'active',
+                'purchase_date' => now(),
+                'expires_at' => now()->addYear(),
+                'will_renew' => false,
+            ]
+        );
+
+        $user->updateUsageLimits();
+
+        return response()->json([
+            'success' => true,
+            'message' => "User {$user->name} upgraded to paid tier.",
+        ]);
+    }
+
+    /**
+     * Force downgrade user to free tier (API - admin only).
+     */
+    public function forceDowngrade(Request $request, int $userId)
+    {
+        $user = User::findOrFail($userId);
+
+        Subscription::where('user_id', $userId)
+            ->where('type', 'revenuecat')
+            ->update(['status' => 'cancelled']);
+
+        $user->updateUsageLimits();
+
+        return response()->json([
+            'success' => true,
+            'message' => "User {$user->name} downgraded to free tier.",
         ]);
     }
 }

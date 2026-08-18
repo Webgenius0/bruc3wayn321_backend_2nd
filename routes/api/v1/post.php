@@ -4,7 +4,7 @@ use App\Http\Controllers\API\Post\LikeCommentApiController;
 use App\Http\Controllers\API\Post\PostController;
 use Illuminate\Support\Facades\Route;
 
-Route::controller(PostController::class)->middleware('auth:sanctum')->group(function () {
+Route::controller(PostController::class)->middleware(['auth:sanctum', 'subscription:any'])->group(function () {
     Route::get('posts/trending', 'trending');
     Route::get('posts/latest',   'latest');
     Route::get('posts/followers', 'followersPosts');
