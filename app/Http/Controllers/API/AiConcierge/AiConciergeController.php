@@ -63,12 +63,14 @@ class AiConciergeController extends Controller
 
         $validated = $validator->validated();
         $user = $request->user();
+        // dd($user->getCurrentSubscriptionAttribute());
+        $stcode = $user->getCurrentSubscriptionAttribute() == 'free' ? 426 : 429;
         /* Check Usage Limit */
         if (!$user->canPerformAction($validated['type'])) {
             $message = $validated['type'] === 'ai_voice'
                 ? 'You have reached your monthly AI voice chat limit. Please upgrade to a paid subscription for more messages.'
                 : 'You have reached your monthly AI chat limit. Please upgrade to a paid subscription for more messages.';
-            return $this->errorResponse($message, 429);
+            return $this->errorResponse($message, $stcode);
         }
 
         /*
@@ -93,7 +95,6 @@ class AiConciergeController extends Controller
             $assistantMessage = $this->service->chat($conversation, $validated['message']);
             $user->incrementUsage($validated['type']);
             return $this->successResponse('Message sent', ['conversation_id' => $conversation->id, 'conversation_title' => $conversation->fresh()->title, 'message' => $assistantMessage]);
-            
         } catch (\Exception $e) {
             return $this->errorResponse('Failed to get AI response: ' . $e->getMessage(), 500);
         }

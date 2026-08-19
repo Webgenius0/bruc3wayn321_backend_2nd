@@ -132,11 +132,10 @@ class PostController extends Controller
         $user = $request->user();
 
         // Check post creation limit
+
+        $stcode = $user->getCurrentSubscriptionAttribute() == 'free' ? 426 : 429;
         if (!$user->canPerformAction('posts')) {
-            return $this->errorResponse(
-                'You have reached your community post limit. Please upgrade to a paid subscription for unlimited posts.',
-                429
-            );
+            return $this->successResponse('You have reached your community post limit. Please upgrade to a paid subscription for unlimited posts.', [], $stcode);
         }
 
         $post = $this->service->create($request->validated());

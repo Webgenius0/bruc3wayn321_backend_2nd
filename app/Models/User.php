@@ -48,6 +48,30 @@ class User extends Authenticatable implements PasskeyUser
 
     protected $hidden = ['password', 'two_factor_secret', 'two_factor_recovery_codes', 'remember_token'];
 
+    protected $appends = [
+        'is_subscribed',
+        'can_activate_free_trial',
+        'current_subscription', //free or paid
+    ];
+
+
+    public function getCanActivateFreeTrialAttribute(): bool
+    {
+        return $this->isEligibleForFreeTrial() && !$this->is_subscribed;
+    }
+
+    public function getCurrentSubscriptionAttribute(): string
+    {
+        $subscription = $this->activeSubscription;
+
+        if (!$subscription) {
+            return 'paid';
+        }
+
+        return $subscription->type === 'free' ? 'free' : 'paid';
+    }
+
+    //'can_activate_free_trial' => $user->isEligibleForFreeTrial() && !$user->is_subscribed,
 
     public function destinations()
     {
@@ -168,9 +192,6 @@ class User extends Authenticatable implements PasskeyUser
         return $this->following()->count();
     }
 
-    protected $appends = [
-        'is_subscribed',
-    ];
 
     public function subscriptions()
     {

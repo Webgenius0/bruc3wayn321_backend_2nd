@@ -2,12 +2,14 @@
 
 namespace App\Http\Middleware;
 
+use App\Concerns\ApiResponse;
 use Closure;
 use Illuminate\Http\Request;
 use Symfony\Component\HttpFoundation\Response;
 
 class CheckSubscription
 {
+    use ApiResponse;
     /**
      * Handle an incoming request.
      *
@@ -21,11 +23,7 @@ class CheckSubscription
         // 'any' = requires free OR paid active subscription
         if ($require === 'any') {
             if (!$user->is_subscribed) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'You need an active subscription (free or paid) to access this feature.',
-                    'required' => 'any',
-                ], 403);
+                return $this->errorResponse('You need an active subscription (free or paid) to access this feature.', 403);
             }
             return $next($request);
         }
@@ -33,11 +31,12 @@ class CheckSubscription
         // 'paid' = requires paid RevenueCat subscription specifically
         if ($require === 'paid') {
             if (!$user->hasPaidSubscription()) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'A paid subscription is required to access this feature.',
-                    'required' => 'paid',
-                ], 403);
+                // return response()->json([
+                //     'success' => false,
+                //     'message' => 'A paid subscription is required to access this feature.',
+                //     'required' => 'paid',
+                // ], 403);
+                return $this->errorResponse('A paid subscription is required to access this feature.', 403);
             }
             return $next($request);
         }
@@ -45,11 +44,12 @@ class CheckSubscription
         // 'free' = requires free subscription specifically (rare)
         if ($require === 'free') {
             if (!$user->hasFreeSubscription()) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'A free subscription is required to access this feature.',
-                    'required' => 'free',
-                ], 403);
+                // return response()->json([
+                //     'success' => false,
+                //     'message' => 'A free subscription is required to access this feature.',
+                //     'required' => 'free',
+                // ], 403);
+                return $this->errorResponse('A free subscription is required to access this feature.', 403);
             }
             return $next($request);
         }
