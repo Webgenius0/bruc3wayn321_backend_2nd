@@ -24,47 +24,16 @@ class UserUpdateRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'first_name' => [
-                'nullable',
-                'string',
-                'max:255',
-            ],
-
-            'last_name' => [
-                'nullable',
-                'string',
-                'max:255',
-            ],
-
-            'email' => [
-                'nullable',
-                'email',
-                Rule::unique('users', 'email')
-                    ->ignore($this->user()->id),
-            ],
-
-            'phone' => [
-                'nullable',
-            ],
-
-            'date_of_birth' => [
-                'nullable',
-                'date',
-            ],
-
-            'avatar' => [
-                'nullable',
-                'image',
-                'mimes:jpg,jpeg,png,webp',
-            ],
-
-            'user_name' => [
-                'nullable'
-            ],
-            'bio' => [
-                'nullable'
-            ],
-
+            'first_name'            => ['nullable', 'string', 'max:255'],
+            'last_name'             => ['nullable', 'string', 'max:255'],
+            'email'                 => ['nullable', 'email', Rule::unique('users', 'email')->ignore($this->user()->id)],
+            'phone'                 => ['nullable'],
+            'date_of_birth'         => ['nullable', 'date'],
+            'avatar'                => ['nullable', 'image', 'mimes:jpg,jpeg,png,webp'],
+            'user_name'             => ['nullable'],
+            'bio'                   => ['nullable'],
+            'email_visibility' => ['nullable', Rule::in(['true', 'false'])],
+            'phone_visibility' => ['nullable', Rule::in(['true', 'false'])],
         ];
     }
 }

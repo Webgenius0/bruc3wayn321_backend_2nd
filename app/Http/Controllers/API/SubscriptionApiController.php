@@ -376,10 +376,13 @@ class SubscriptionApiController extends Controller
     {
         $user = $request->user();
 
+        // dd($user->getActiveSubscriptionAttribute());
+
         return $this->successResponse('Usage Statstics', [
             'tier' => $user->hasPaidSubscription() ? 'paid' : 'free',
             'limits' => $user->getTierLimits(),
             'usage' => $user->getUsageStats(),
+            'subscription' => $user->getActiveSubscriptionAttribute(),
         ]);
     }
 

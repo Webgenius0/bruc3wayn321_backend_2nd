@@ -18,6 +18,14 @@ class AuthRepository
 
     public function update(User $user, array $data): User
     {
+        if (isset($data['email_visibility'])) {
+            $data['email_visibility'] = $data['email_visibility'] === 'true';
+        }
+
+        if (isset($data['phone_visibility'])) {
+            $data['phone_visibility'] = $data['phone_visibility'] === 'true';
+        }
+
         $user->update($data);
 
         return $user->fresh();

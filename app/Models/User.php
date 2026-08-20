@@ -44,6 +44,8 @@ class User extends Authenticatable implements PasskeyUser
         "like_notifications",
         "marketing_notifications",
         "status",
+        "email_visibility",
+        "phone_visibility",
     ];
 
     protected $hidden = ['password', 'two_factor_secret', 'two_factor_recovery_codes', 'remember_token'];
@@ -52,6 +54,11 @@ class User extends Authenticatable implements PasskeyUser
         'is_subscribed',
         'can_activate_free_trial',
         'current_subscription', //free or paid
+    ];
+
+    protected $casts = [
+        'email_visibility' => 'boolean',
+        'phone_visibility' => 'boolean',
     ];
 
 

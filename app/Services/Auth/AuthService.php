@@ -12,6 +12,7 @@ use Exception;
 use Ichtrojan\Otp\Otp;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Password;
 use Illuminate\Support\Facades\Storage;
@@ -229,7 +230,7 @@ class AuthService
         try {
             $user->notify(new \App\Notifications\ProfileUpdated());
         } catch (\Throwable $e) {
-            \Log::error("Failed to notify user on profile update: " . $e->getMessage());
+            Log::error("Failed to notify user on profile update: " . $e->getMessage());
         }
 
         return $this->successResponse(
