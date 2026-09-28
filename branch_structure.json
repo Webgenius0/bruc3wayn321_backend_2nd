@@ -1,0 +1,21 @@
+{
+  "default_branch": "main",
+  "branches": [
+    "backup",
+    "main",
+    "origin",
+    "sakhawat"
+  ],
+  "parent": {
+    "backup": "main",
+    "main": null,
+    "origin": "main",
+    "sakhawat": "main"
+  },
+  "order": [
+    "main",
+    "backup",
+    "origin",
+    "sakhawat"
+  ]
+}
