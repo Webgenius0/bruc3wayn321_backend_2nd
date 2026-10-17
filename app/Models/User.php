@@ -28,7 +28,7 @@ class User extends Authenticatable implements PasskeyUser
         'password',
         'avatar',
         'cover_image',
-        // 'role',
+        'role',
         'email_verified_at',
         'remember_token',
         'phone',

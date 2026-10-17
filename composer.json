@@ -24,7 +24,8 @@
         "laravel/tinker": "^3.0",
         "laravel/wayfinder": "^0.1.14",
         "opcodesio/log-viewer": "^3.24",
-        "socialiteproviders/apple": "^5.10"
+        "socialiteproviders/apple": "^5.10",
+        "tymon/jwt-auth": "^2.3"
     },
     "require-dev": {
         "fakerphp/faker": "^1.24",
