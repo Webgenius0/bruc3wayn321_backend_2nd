@@ -181,9 +181,13 @@ class ChatApiController extends Controller
             return Helper::validation($validate->errors());
         }
 
+        if (!$chat->users()->where('users.id', auth()->id())->exists()) {
+            return Helper::error('Unauthorized access to this chat', 403);
+        }
+
         $links = [];
 
-        preg_match_all('/https?:\/\/[^\s]+/i', $request->message, $matches);
+        preg_match_all('/https?:\/\/[^\s]+/i', $request->message ?? '', $matches);
 
         foreach ($matches[0] ?? [] as $url) {
 
@@ -192,25 +196,51 @@ class ChatApiController extends Controller
             $thumbnail = null;
 
             try {
-                $html = file_get_contents($url);
+                $parsed = parse_url($url);
+                $scheme = strtolower($parsed['scheme'] ?? '');
+                $host = $parsed['host'] ?? '';
 
-                preg_match('/<title>(.*?)<\/title>/si', $html, $titleMatch);
-                $title = $titleMatch[1] ?? null;
+                if (in_array($scheme, ['http', 'https']) && !empty($host)) {
+                    $ip = gethostbyname($host);
+                    // Prevent SSRF to localhost or private network ranges
+                    if (filter_var($ip, FILTER_VALIDATE_IP, FILTER_FLAG_NO_PRIV_RANGE | FILTER_FLAG_NO_RES_RANGE)) {
+                        $context = stream_context_create([
+                            'http' => [
+                                'timeout' => 2,
+                                'follow_location' => 1,
+                                'max_redirects' => 3,
+                                'header' => "User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36\r\n",
+                            ],
+                            'ssl' => [
+                                'verify_peer' => false,
+                                'verify_peer_name' => false,
+                            ]
+                        ]);
 
-                preg_match(
-                    '/<meta[^>]+property=["\']og:description["\'][^>]+content=["\']([^"\']+)/i',
-                    $html,
-                    $descMatch
-                );
-                $description = $descMatch[1] ?? null;
+                        // Read up to 100KB only to parse head meta tags
+                        $html = @file_get_contents($url, false, $context, 0, 102400);
 
-                preg_match(
-                    '/<meta[^>]+property=["\']og:image["\'][^>]+content=["\']([^"\']+)/i',
-                    $html,
-                    $imageMatch
-                );
-                $thumbnail = $imageMatch[1] ?? null;
-            } catch (\Exception $e) {
+                        if ($html) {
+                            preg_match('/<title>(.*?)<\/title>/si', $html, $titleMatch);
+                            $title = $titleMatch[1] ?? null;
+
+                            preg_match(
+                                '/<meta[^>]+property=["\']og:description["\'][^>]+content=["\']([^"\']+)/i',
+                                $html,
+                                $descMatch
+                            );
+                            $description = $descMatch[1] ?? null;
+
+                            preg_match(
+                                '/<meta[^>]+property=["\']og:image["\'][^>]+content=["\']([^"\']+)/i',
+                                $html,
+                                $imageMatch
+                            );
+                            $thumbnail = $imageMatch[1] ?? null;
+                        }
+                    }
+                }
+            } catch (\Throwable $e) {
             }
 
             $links[] = [
@@ -273,6 +303,9 @@ class ChatApiController extends Controller
             return Helper::error('Chat not found', 404);
         }
 
+        if (!$chat->users()->where('users.id', auth()->id())->exists()) {
+            return Helper::error('Unauthorized access to this chat', 403);
+        }
 
         $messages = ChatMessage::where('chat_id', $chat->id)
             ->with([

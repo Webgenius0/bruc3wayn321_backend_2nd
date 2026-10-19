@@ -346,6 +346,10 @@ class UserController extends Controller
             return $this->errorResponse('Chat not found', 404);
         }
 
+        if (!$chat->users()->where('users.id', auth()->id())->exists()) {
+            return $this->errorResponse('Unauthorized access to this chat', 403);
+        }
+
         $attachments = $chat->messages
             ->pluck('attachments')
             ->flatten()
@@ -360,6 +364,10 @@ class UserController extends Controller
 
         if (!$chat) {
             return $this->errorResponse('Chat not found', 404);
+        }
+
+        if (!$chat->users()->where('users.id', auth()->id())->exists()) {
+            return $this->errorResponse('Unauthorized access to this chat', 403);
         }
 
         $links = $chat->messages

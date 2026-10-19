@@ -6,6 +6,7 @@ use App\Helpers\Helper;
 use App\Models\Post;
 use App\Repositories\PostRepository;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 
 class PostService
@@ -202,5 +203,35 @@ class PostService
         return [
             'views_count' => $post->views()->count(),
         ];
+    }
+
+    public function delete(Post $post): bool
+    {
+        if ($post->user_id !== Auth::id()) {
+            abort(403, 'Unauthorized.');
+        }
+
+        if (!empty($post->images) && is_array($post->images)) {
+            foreach ($post->images as $image) {
+                $relative = str_replace('storage/', '', $image);
+                Storage::disk('public')->delete($relative);
+            }
+        }
+
+        if (!empty($post->audios) && is_array($post->audios)) {
+            foreach ($post->audios as $audio) {
+                $relative = str_replace('storage/', '', $audio);
+                Storage::disk('public')->delete($relative);
+            }
+        }
+
+        if (!empty($post->videos) && is_array($post->videos)) {
+            foreach ($post->videos as $video) {
+                $relative = str_replace('storage/', '', $video);
+                Storage::disk('public')->delete($relative);
+            }
+        }
+
+        return (bool) $post->delete();
     }
 }

@@ -26,7 +26,7 @@ class PostController extends Controller
     /**
      * Get posts from a specific user
      */
-    public function userPosts($id): JsonResponse
+    public function userPosts(Request $request, $id): JsonResponse
     {
         $user = User::findOrFail($id);
 
@@ -46,7 +46,7 @@ class PostController extends Controller
             ])
             ->where('visibility', true)
             ->latest()
-            ->get();
+            ->paginate($request->get('per_page', 15));
 
         return $this->successResponse(
             $user->first_name . ' Posts',
@@ -57,7 +57,7 @@ class PostController extends Controller
     /**
      * Get posts from users that current user follows
      */
-    public function followersPosts(): JsonResponse
+    public function followersPosts(Request $request): JsonResponse
     {
         $currentUser = auth()->user();
         $followingUserIds = $currentUser->following()->pluck('users.id');
@@ -74,7 +74,7 @@ class PostController extends Controller
             ])
             ->where('visibility', true)
             ->latest()
-            ->get();
+            ->paginate($request->get('per_page', 15));
 
         return $this->successResponse(
             'Posts from followers',
@@ -82,7 +82,7 @@ class PostController extends Controller
         );
     }
 
-    public function latest()
+    public function latest(Request $request)
     {
         $posts = Post::with([
             'user',
@@ -94,7 +94,7 @@ class PostController extends Controller
                 'views',
             ])->latest()
             ->where('visibility', true)
-            ->get();
+            ->paginate($request->get('per_page', 15));
 
         return $this->successResponse(
             'Latest Posts',
@@ -197,12 +197,24 @@ class PostController extends Controller
      */
     public function destroy(Post $post): JsonResponse
     {
-        $this->service->delete($post);
+        try {
+            $this->service->delete($post);
 
-        return response()->json([
-            'success' => true,
-            'message' => 'Post deleted successfully.'
-        ]);
+            return response()->json([
+                'success' => true,
+                'message' => 'Post deleted successfully.'
+            ]);
+        } catch (\Symfony\Component\HttpKernel\Exception\HttpException $e) {
+            return response()->json([
+                'success' => false,
+                'message' => $e->getMessage() ?: 'Unauthorized to delete this post.'
+            ], $e->getStatusCode());
+        } catch (\Throwable $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to delete post.'
+            ], 500);
+        }
     }
 
     /**
