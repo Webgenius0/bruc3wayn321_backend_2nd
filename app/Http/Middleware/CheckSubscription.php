@@ -20,6 +20,10 @@ class CheckSubscription
     {
         $user = $request->user();
 
+        if ($user) {
+            $user->syncExpiredSubscriptions();
+        }
+
         // 'any' = requires free OR paid active subscription
         if ($require === 'any') {
             if (!$user->is_subscribed) {

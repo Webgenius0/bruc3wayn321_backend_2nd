@@ -79,4 +79,43 @@ class Subscription extends Model
         }
         return $expiresAt->gt(now()) ? $expiresAt : null;
     }
+
+    /**
+     * Expire all overdue active subscriptions globally and update affected users' limits.
+     */
+    public static function expireOverdue(): int
+    {
+        $overdueSubscriptions = self::where('status', 'active')
+            ->where(function ($query) {
+                $query->where(function ($free) {
+                    $free->where('type', 'free')
+                        ->whereNotNull('free_expires_at')
+                        ->where('free_expires_at', '<=', now());
+                })->orWhere(function ($paid) {
+                    $paid->where('type', '!=', 'free')
+                        ->whereNotNull('expires_at')
+                        ->where('expires_at', '<=', now());
+                });
+            })
+            ->get();
+
+        if ($overdueSubscriptions->isEmpty()) {
+            return 0;
+        }
+
+        $userIds = $overdueSubscriptions->pluck('user_id')->unique();
+
+        self::whereIn('id', $overdueSubscriptions->pluck('id'))
+            ->update([
+                'status' => 'expired',
+                'will_renew' => false,
+            ]);
+
+        foreach (User::whereIn('id', $userIds)->get() as $user) {
+            $user->updateUsageLimits();
+        }
+
+        return $overdueSubscriptions->count();
+    }
 }
+

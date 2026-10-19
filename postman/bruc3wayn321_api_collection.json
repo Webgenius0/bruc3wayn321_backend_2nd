@@ -2762,6 +2762,74 @@
               ]
             }
           }
+        },
+        {
+          "name": "🧪 Testing: Expire Subscription/Trial (Temporary)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"user_id\": 4\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/subscription/test-expire/{{user_id}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "subscription",
+                "test-expire",
+                "{{user_id}}"
+              ]
+            },
+            "description": "TEMPORARY TESTING API: Forces the target user's subscription or free trial date to the past so frontend/app devs can verify that 'is_subscribed' becomes false and status becomes expired."
+          }
+        },
+        {
+          "name": "🧪 Testing: Reset Free Trial to Active (Temporary)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              },
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"user_id\": 4\n}"
+            },
+            "url": {
+              "raw": "{{base_url}}/api/v1/subscription/test-reset-trial/{{user_id}}",
+              "host": [
+                "{{base_url}}"
+              ],
+              "path": [
+                "api",
+                "v1",
+                "subscription",
+                "test-reset-trial",
+                "{{user_id}}"
+              ]
+            },
+            "description": "TEMPORARY TESTING API: Resets the target user's free trial to active (+7 days) so frontend/app devs can test transitioning between expired and active states."
+          }
         }
       ]
     },

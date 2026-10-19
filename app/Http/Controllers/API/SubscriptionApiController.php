@@ -116,6 +116,7 @@ class SubscriptionApiController extends Controller
     public function show(Request $request)
     {
         $user = $request->user();
+        $user->syncExpiredSubscriptions();
 
         $freeSubscription = $user->subscriptions()
             ->where('type', 'free')
@@ -288,6 +289,7 @@ class SubscriptionApiController extends Controller
     public function checkTrial(Request $request)
     {
         $user = $request->user();
+        $user->syncExpiredSubscriptions();
 
         $hasFreeTrial = $user->hasUsedFreeTrial();
         $activeFree = $user->active_free_subscription;
@@ -390,6 +392,7 @@ class SubscriptionApiController extends Controller
     public function usageStats(Request $request)
     {
         $user = $request->user();
+        $user->syncExpiredSubscriptions();
 
         // dd($user->getActiveSubscriptionAttribute());
 
@@ -448,4 +451,123 @@ class SubscriptionApiController extends Controller
             'message' => "User {$user->name} downgraded to free tier.",
         ]);
     }
+
+    /**
+     * TEMPORARY TESTING ENDPOINT: Expire user's subscription / free trial date.
+     * Can be hit with user ID in URL: /subscription/test-expire/{userId}
+     * Or in request body: {"user_id": 4}
+     * Disable/delete this method after testing.
+     */
+    public function testExpire(Request $request, ?int $userId = null)
+    {
+        $targetId = $userId ?? $request->input('user_id') ?? $request->user()?->id;
+
+        if (!$targetId) {
+            return response()->json([
+                'success' => false,
+                'message' => 'User ID is required. Pass it in URL (/subscription/test-expire/{userId}) or body {"user_id": 4}',
+            ], 422);
+        }
+
+        $user = User::find($targetId);
+        if (!$user) {
+            return response()->json([
+                'success' => false,
+                'message' => "User with ID {$targetId} not found.",
+            ], 404);
+        }
+
+        $subscription = Subscription::where('user_id', $user->id)->first();
+        if (!$subscription) {
+            return response()->json([
+                'success' => false,
+                'message' => "No subscription found for user ID {$targetId}.",
+            ], 404);
+        }
+
+        // ONLY move expiration dates to the past (yesterday).
+        // DO NOT change 'status' or 'will_renew', and DO NOT manually sync here.
+        // This simulates a real-world scenario where the user registered, 7 days passed,
+        // and the database record is still sitting with status='active'.
+        $subscription->update([
+            'expires_at' => $subscription->type !== 'free' ? now()->subDay() : null,
+            'free_expires_at' => $subscription->type === 'free' ? now()->subDay() : null,
+        ]);
+
+        return response()->json([
+            'success' => true,
+            'message' => "Only the date was moved to the past (yesterday). Status in DB was left untouched as '{$subscription->status}' so you can verify if the status API automatically detects the expiration.",
+            'database_before_status_call' => [
+                'status_in_db' => $subscription->status,
+                'will_renew_in_db' => $subscription->will_renew,
+                'free_expires_at' => $subscription->free_expires_at,
+                'expires_at' => $subscription->expires_at,
+            ],
+            'immediate_check' => [
+                'is_subscribed' => $user->is_subscribed,
+                'current_subscription' => $user->current_subscription,
+            ],
+            'instructions_for_frontend' => 'Now call GET /api/v1/subscription or GET /api/v1/subscription/trial-status to see the automatic expiration and renewed state.',
+        ]);
+    }
+
+    /**
+     * TEMPORARY TESTING ENDPOINT: Reset free trial to active (+7 days).
+     * Can be hit with user ID in URL: /subscription/test-reset-trial/{userId}
+     * Or in request body: {"user_id": 4}
+     * Disable/delete this method after testing.
+     */
+    public function testResetTrial(Request $request, ?int $userId = null)
+    {
+        $targetId = $userId ?? $request->input('user_id') ?? $request->user()?->id;
+
+        if (!$targetId) {
+            return response()->json([
+                'success' => false,
+                'message' => 'User ID is required. Pass it in URL (/subscription/test-reset-trial/{userId}) or body {"user_id": 4}',
+            ], 422);
+        }
+
+        $user = User::find($targetId);
+        if (!$user) {
+            return response()->json([
+                'success' => false,
+                'message' => "User with ID {$targetId} not found.",
+            ], 404);
+        }
+
+        $subscription = Subscription::updateOrCreate(
+            ['user_id' => $user->id],
+            [
+                'type' => 'free',
+                'store' => 'INTERNAL',
+                'product_id' => 'free_trial',
+                'entitlement' => 'free_trial',
+                'status' => 'active',
+                'purchase_date' => now(),
+                'expires_at' => null,
+                'free_expires_at' => now()->addDays(7),
+                'trial_type' => 'free_trial',
+                'will_renew' => false,
+            ]
+        );
+
+        $user->update(['can_activate_free_trial' => false]);
+        $user->updateUsageLimits();
+
+        return response()->json([
+            'success' => true,
+            'message' => "Successfully reset free trial to active (+7 days) for user {$user->id} ({$user->name}).",
+            'user' => [
+                'id' => $user->id,
+                'name' => $user->name,
+                'email' => $user->email,
+                'is_subscribed' => $user->is_subscribed,
+                'current_subscription' => $user->current_subscription,
+                'has_used_free_trial' => $user->has_used_free_trial,
+            ],
+            'subscription' => $subscription->fresh(),
+        ]);
+    }
 }
+

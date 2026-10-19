@@ -54,6 +54,7 @@ class User extends Authenticatable implements PasskeyUser
     protected $appends = [
         'is_subscribed',
         'current_subscription',
+        'has_used_free_trial',
     ];
 
     protected $casts = [
@@ -62,17 +63,17 @@ class User extends Authenticatable implements PasskeyUser
     ];
 
 
-    // public function getCanActivateFreeTrialAttribute(): bool
-    // {
-    //     return $this->isEligibleForFreeTrial() && !$this->is_subscribed;
-    // }
+    public function getHasUsedFreeTrialAttribute(): bool
+    {
+        return $this->hasUsedFreeTrial();
+    }
 
     public function getCurrentSubscriptionAttribute(): string
     {
         $subscription = $this->activeSubscription;
 
         if (!$subscription) {
-            return 'paid';
+            return 'free';
         }
 
         return $subscription->type === 'free' ? 'free' : 'paid';
@@ -207,18 +208,35 @@ class User extends Authenticatable implements PasskeyUser
 
     public function getIsSubscribedAttribute(): bool
     {
-        return $this->subscriptions()
+        return $this->activeSubscription !== null;
+    }
+
+    /**
+     * Sync and expire subscriptions whose expiry dates have passed.
+     */
+    public function syncExpiredSubscriptions(): void
+    {
+        $expiredCount = $this->subscriptions()
             ->where('status', 'active')
-            ->where(function ($query) {
-                $query->whereNull('expires_at')
-                    ->orWhere('expires_at', '>', now())
-                    ->orWhere(function ($q) {
-                        $q->where('type', 'free')
-                            ->whereNull('free_expires_at')
-                            ->orWhere('free_expires_at', '>', now());
-                    });
+            ->where(function ($q) {
+                $q->where(function ($free) {
+                    $free->where('type', 'free')
+                        ->whereNotNull('free_expires_at')
+                        ->where('free_expires_at', '<=', now());
+                })->orWhere(function ($paid) {
+                    $paid->where('type', '!=', 'free')
+                        ->whereNotNull('expires_at')
+                        ->where('expires_at', '<=', now());
+                });
             })
-            ->exists();
+            ->update([
+                'status' => 'expired',
+                'will_renew' => false,
+            ]);
+
+        if ($expiredCount > 0) {
+            $this->updateUsageLimits();
+        }
     }
 
     /**
