@@ -3,7 +3,6 @@
 // use App\Http\Controllers\API\ChatApiController;
 use App\Http\Controllers\API\Message\ChatApiController;
 use App\Http\Controllers\API\Notification\FirebaseTokenController;
-use App\Services\FCMService;
 use App\Services\OpenWeatherService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
@@ -12,7 +11,6 @@ Route::get('/user', function (Request $request) {
     return $request->user();
 })->middleware('auth:sanctum');
 
-
 Route::get('/weather', function (OpenWeatherService $service) {
 
     // $data = $service->currentByCity("mohakhali");
@@ -20,7 +18,7 @@ Route::get('/weather', function (OpenWeatherService $service) {
 
     return $data;
 });
-
+// /
 
 Route::prefix('v1')->group(function () {
     require base_path('routes/api/v1/auth.php');
@@ -37,7 +35,7 @@ Route::prefix('v1')->group(function () {
 
 Route::middleware('auth:sanctum')->get('/test-push', [FirebaseTokenController::class, 'test']);
 
-// chat message controller 
+// chat message controller
 Route::prefix('chat')->controller(ChatApiController::class)->middleware('auth:sanctum')->group(function () {
     Route::post('/open-group', 'openOrCreate');
     Route::post('{chat}/message', 'sendByChat');
