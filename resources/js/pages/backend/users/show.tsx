@@ -1,6 +1,6 @@
 import MainLayout from "@/layouts/main-layout";
-
 import { Link } from "@inertiajs/react";
+import { UserAvatar } from "@/components/ui/user-avatar";
 
 interface Props {
     user: any;
@@ -9,12 +9,7 @@ interface Props {
 export default function Show({
     user,
 }: Props) {
-
-    const avatar =
-        user.avatar &&
-            user.avatar !== "null"
-            ? `/${user.avatar}`
-            : "/backend/assets/images/placholder.png";
+    const fullName = `${user.first_name || ''} ${user.last_name || ''}`.trim() || user.name || 'User';
 
     return (
         <div className="row">
@@ -29,15 +24,11 @@ export default function Show({
                         flexDirection: "column"
                     }}>
 
-                        <img
-                            src={avatar}
-                            alt={user.name }
-                            className="rounded-circle mb-3 border border-1 d-flex justify-content-center align-items-center"
-                            style={{
-                                width: "120px",
-                                height: "120px",
-                                objectFit: "cover",
-                            }}
+                        <UserAvatar
+                            src={user.avatar}
+                            name={fullName}
+                            size={120}
+                            className="mb-3 border border-2 border-light shadow-sm"
                         />
 
                         <h3 className="mb-1">

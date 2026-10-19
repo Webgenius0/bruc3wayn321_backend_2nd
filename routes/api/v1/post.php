@@ -14,6 +14,8 @@ Route::controller(PostController::class)->middleware(['auth:sanctum'])->group(fu
     Route::post('posts', 'store')->middleware('subscription:any');
     Route::get('post/details/{post:slug}', 'show');
     Route::put('post/update/{post:slug}', 'update');
+    Route::delete('posts/{post:slug}', 'destroy');
+    Route::delete('post/delete/{post:slug}', 'destroy');
     Route::post('post/{post:slug}/visibility', 'postVisibility');
     Route::get('post/my-post', 'myPosts');
 });

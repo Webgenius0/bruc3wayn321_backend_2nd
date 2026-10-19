@@ -4,3 +4,57 @@
     text-overflow: ellipsis;
     white-space: nowrap;
 }
+
+/* Chat bubble styling for both light and dark mode */
+.chat-bubble-received {
+    background-color: #f1f5f9;
+    color: #0f172a;
+    padding: 10px 15px;
+    border-radius: 0 10px 10px 10px;
+    margin-bottom: 6px;
+    word-break: break-word;
+}
+
+[data-theme="dark"] .chat-bubble-received,
+.dark .chat-bubble-received {
+    background-color: #28333f !important;
+    color: #f8fafc !important;
+}
+
+[data-theme="dark"] .chat-bubble-received a,
+.dark .chat-bubble-received a {
+    color: #38bdf8 !important;
+}
+
+.chat-bubble-sent {
+    background-color: #0d6efd;
+    color: #ffffff !important;
+    padding: 10px 15px;
+    border-radius: 10px 0 10px 10px;
+    margin-bottom: 6px;
+    word-break: break-word;
+}
+
+[data-theme="dark"] .chat-bubble-sent,
+.dark .chat-bubble-sent {
+    background-color: #2563eb !important;
+    color: #ffffff !important;
+}
+
+/* Dark mode chat container and text */
+[data-theme="dark"] .chat-body,
+.dark .chat-body {
+    background-color: #1b232d !important;
+}
+
+[data-theme="dark"] .chat-reverse li span.fs-14,
+.dark .chat-reverse li span.fs-14 {
+    color: #94a3b8 !important;
+}
+
+[data-theme="dark"] .conversation-info-table td,
+.dark .conversation-info-table td {
+    background-color: transparent !important;
+    color: #e2e8f0 !important;
+    border-color: rgba(255, 255, 255, 0.08) !important;
+}

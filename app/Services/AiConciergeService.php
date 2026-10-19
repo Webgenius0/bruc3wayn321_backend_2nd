@@ -226,10 +226,12 @@ class AiConciergeService
             ],
         ];
 
-        // Load conversation history
+        // Load conversation history (sliding window of last 20 messages)
         $history = $conversation->messages()
-            ->orderBy('created_at', 'asc')
-            ->get();
+            ->latest('created_at')
+            ->take(20)
+            ->get()
+            ->reverse();
 
         foreach ($history as $message) {
             $messages[] = [

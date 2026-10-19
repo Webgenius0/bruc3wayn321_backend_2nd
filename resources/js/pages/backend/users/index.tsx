@@ -2,6 +2,7 @@ import MainLayout from "@/layouts/main-layout";
 import { Head, router, useForm, Link } from "@inertiajs/react";
 import { useEffect, useState } from "react";
 import Swal from "sweetalert2";
+import { UserAvatar } from "@/components/ui/user-avatar";
 
 
 interface User {
@@ -302,7 +303,11 @@ export default function Index({ users, filters }: Props) {
                                                         <td>
                                                             <div className="d-flex align-items-center">
                                                                 <div className="flex-shrink-0">
-                                                                    <img alt="user15" className="rounded-circle" src={user.avatar ? `/${user.avatar}` : "/backend/assets/images/placholder.png"} style={{ width: "35px", height: "35px" }} />
+                                                                    <UserAvatar
+                                                                        src={user.avatar}
+                                                                        name={`${user.first_name || ''} ${user.last_name || ''}`.trim() || 'User'}
+                                                                        size={36}
+                                                                    />
                                                                 </div>
                                                                 <div className="flex-grow-1 ms-12">
                                                                     <h4 className="fw-medium fs-16 mb-0">

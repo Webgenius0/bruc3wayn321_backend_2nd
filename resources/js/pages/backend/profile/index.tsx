@@ -1,6 +1,7 @@
 import ImageUpload from "@/pages/widget/image-upload";
 import { Head, useForm } from "@inertiajs/react";
 import { useState } from "react";
+import { UserAvatar, formatAvatarUrl } from "@/components/ui/user-avatar";
 
 interface Props {
     user: {
@@ -70,15 +71,11 @@ export default function Index({ user }: Props) {
                 <div className="col-lg-4">
                     <div className="card bg-white p-20 rounded-10 border border-white mb-4">
                         <div className="text-center d-flex flex-column align-items-center">
-                            <img
-                                src={avatar}
-                                alt={user.first_name}
-                                className="rounded-circle mb-3 border border-1"
-                                style={{
-                                    width: "120px",
-                                    height: "120px",
-                                    objectFit: "cover",
-                                }}
+                            <UserAvatar
+                                src={user.avatar}
+                                name={`${user.first_name || ''} ${user.last_name || ''}`.trim() || 'Admin'}
+                                size={120}
+                                className="mb-3 border border-2 border-light shadow-sm"
                             />
 
                             <h3 className="mb-1">{user.first_name} {user.last_name}</h3>
@@ -254,7 +251,7 @@ export default function Index({ user }: Props) {
                                     <ImageUpload
                                         label="Avatar"
                                         file={profileForm.data.avatar}
-                                        imageUrl={user.avatar ? avatar : ""}
+                                        imageUrl={formatAvatarUrl(user.avatar) || ""}
                                         onChange={(file) =>
                                             profileForm.setData("avatar", file)
                                         }

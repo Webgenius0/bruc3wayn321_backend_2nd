@@ -131,6 +131,15 @@ class AiConciergeController extends Controller
         $user = $request->user();
         $validated = $validator->validated();
 
+        $stcode = $user->getCurrentSubscriptionAttribute() == 'free' ? 426 : 429;
+        /* Check Usage Limit before consuming expensive 3rd party APIs */
+        if (!$user->canPerformAction('ai_voice')) {
+            return $this->errorResponse(
+                'You have reached your monthly AI voice chat limit. Please upgrade to a paid subscription for more messages.',
+                $stcode
+            );
+        }
+
         try {
             // 1. Transcribe the uploaded audio
             $audioFile = $request->file('audio');
