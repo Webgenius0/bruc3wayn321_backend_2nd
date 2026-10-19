@@ -7,6 +7,8 @@
 /public/storage
 /storage/*.key
 /storage/pail
+/storage/app/public/*
+!/storage/app/public/.gitignore
 /resources/js/actions
 /resources/js/routes
 /resources/js/wayfinder
@@ -19,6 +21,7 @@
 .phpunit.result.cache
 Homestead.json
 Homestead.yaml
+*.log
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
