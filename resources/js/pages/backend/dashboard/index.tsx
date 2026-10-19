@@ -1,5 +1,6 @@
 import { Head, Link } from '@inertiajs/react';
 import DashboardChart from '../../widget/chart';
+import { UserAvatar } from '@/components/ui/user-avatar';
 
 interface User {
     id: number;
@@ -324,11 +325,10 @@ export default function Dashboard({ stats, charts, notifications, communityPosts
                                                     <td>
                                                         {post.user && (
                                                             <div className="d-flex align-items-center gap-2">
-                                                                <img
-                                                                    src={getAvatarSrc(post.user.avatar)}
-                                                                    alt={post.user.first_name}
-                                                                    className="rounded-circle"
-                                                                    style={{ width: 38, height: 38, objectFit: 'cover' }}
+                                                                <UserAvatar
+                                                                    src={post.user.avatar}
+                                                                    name={`${post.user.first_name || ''} ${post.user.last_name || ''}`}
+                                                                    size={38}
                                                                 />
                                                                 <div className="fw-medium fs-13">
                                                                     {post.user.first_name} {post.user.last_name}

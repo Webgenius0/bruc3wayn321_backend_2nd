@@ -3,6 +3,7 @@ import React, { useState } from 'react';
 import { Head, Link, router, usePage, } from '@inertiajs/react';
 import { toast } from 'sonner';
 import Swal from "sweetalert2";
+import { PostThumbnail } from '@/components/ui/post-thumbnail';
 
 
 interface PaginationLink {
@@ -45,6 +46,7 @@ interface Post {
     total_comments?: number;
     total_views?: number;
     image?: string;
+    images?: string[] | string;
     created_at_formatted?: string;
     slug?: string;
 }
@@ -157,22 +159,13 @@ export default function PostIndex({ posts, filters }: Props) {
                                                     <tr key={post.id}>
                                                         <td>{post.id}</td>
                                                         <td>
-                                                            {post.image ? (
-                                                                <img
-                                                                    src={`/${post.image}`}
-                                                                    alt="Post"
-                                                                    width={60}
-                                                                    height={60}
-                                                                    style={{ objectFit: "cover", borderRadius: "6px" }}
-                                                                />
-                                                            ) : (
-                                                                <div
-                                                                    style={{ width: 60, height: 60, backgroundColor: "#eee", borderRadius: "6px" }}
-                                                                    className="d-flex align-items-center justify-content-center text-muted fs-12"
-                                                                >
-                                                                    No Image
-                                                                </div>
-                                                            )}
+                                                            <PostThumbnail
+                                                                src={post.image || post.images}
+                                                                alt={post.slug || `Post #${post.id}`}
+                                                                width={60}
+                                                                height={60}
+                                                                rounded="6px"
+                                                            />
                                                         </td>
                                                         <td>
                                                             {post.content?.length > 80

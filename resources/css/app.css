@@ -141,3 +141,87 @@
         @apply bg-background text-foreground;
     }
 }
+
+/* Dark mode helpers and contrast fixes */
+[data-theme="dark"] .bg-light,
+.dark .bg-light {
+    background-color: #242e3b !important;
+    color: #e2e8f0 !important;
+}
+
+[data-theme="dark"] .bg-light p,
+[data-theme="dark"] .bg-light span,
+[data-theme="dark"] .bg-light div,
+.dark .bg-light p,
+.dark .bg-light span,
+.dark .bg-light div {
+    color: #e2e8f0 !important;
+}
+
+/* Fix .table-light in dark mode */
+[data-theme="dark"] .table-light,
+.dark .table-light,
+[data-theme="dark"] .table-light th,
+.dark .table-light th {
+    background-color: #242e3b !important;
+    color: #e2e8f0 !important;
+    border-color: rgba(255, 255, 255, 0.08) !important;
+}
+
+/* Fix notification cards on notifications page */
+.notification-card.notification-unread {
+    background-color: #f8fafc;
+}
+.notification-card.notification-read {
+    background-color: #ffffff;
+}
+[data-theme="dark"] .notification-card.notification-unread,
+.dark .notification-card.notification-unread {
+    background-color: #242e3b !important;
+}
+[data-theme="dark"] .notification-card.notification-read,
+.dark .notification-card.notification-read {
+    background-color: #1b232d !important;
+}
+
+/* Fix dropdown menu dark mode backgrounds and items */
+[data-theme="dark"] .dropdown-menu,
+.dark .dropdown-menu {
+    background-color: #1b232d !important;
+    border-color: rgba(255, 255, 255, 0.09) !important;
+    color: #f8fafc !important;
+}
+
+[data-theme="dark"] .dropdown-menu .dropdown-item,
+.dark .dropdown-menu .dropdown-item {
+    color: #94a3b8 !important;
+}
+
+[data-theme="dark"] .dropdown-menu .dropdown-item:hover,
+.dark .dropdown-menu .dropdown-item:hover {
+    background-color: #28333f !important;
+    color: #ffffff !important;
+}
+
+/* Fix search dropdown in navbar */
+.header-search-menu {
+    background-color: #ffffff;
+    border-color: #e2e8f0 !important;
+}
+[data-theme="dark"] .header-search-menu,
+.dark .header-search-menu {
+    background-color: #1b232d !important;
+    border-color: rgba(255, 255, 255, 0.09) !important;
+}
+[data-theme="dark"] .header-search-menu button:hover,
+.dark .header-search-menu button:hover {
+    background-color: #28333f !important;
+}
+
+/* Fix Bootstrap .table td.bg-white in dark mode */
+[data-theme="dark"] .table td.bg-white,
+.dark .table td.bg-white {
+    background-color: transparent !important;
+    color: #e2e8f0 !important;
+}
+
