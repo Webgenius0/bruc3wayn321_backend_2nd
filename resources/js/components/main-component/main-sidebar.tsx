@@ -158,7 +158,8 @@ const items: MenuItem[] = [
 
 export default function MainSidebar() {
     const page = usePage();
-    const { setting } = page.props as any;
+    const { setting, auth } = page.props as any;
+    const unreadCount = auth?.unread_notifications_count || 0;
 
     const theme = document.body.getAttribute('data-theme');
 
@@ -344,8 +345,16 @@ export default function MainSidebar() {
                                             {item.icon_name}
                                         </span>
 
-                                        <span className="title">
-                                            {item.title}
+                                        <span className="title d-flex align-items-center justify-content-between flex-grow-1">
+                                            <span>{item.title}</span>
+                                            {item.title === 'Notifications' && unreadCount > 0 && (
+                                                <span
+                                                    className="badge rounded-pill bg-danger"
+                                                    style={{ fontSize: '11px', padding: '2px 6px' }}
+                                                >
+                                                    {unreadCount > 99 ? '99+' : unreadCount}
+                                                </span>
+                                            )}
                                         </span>
                                     </Link>
                                 )}

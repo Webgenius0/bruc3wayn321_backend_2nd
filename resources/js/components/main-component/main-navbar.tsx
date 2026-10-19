@@ -2,6 +2,7 @@ import { useMemo, useState, type FormEvent } from 'react';
 import { Link, router, usePage } from '@inertiajs/react';
 import { logout } from '@/routes';
 import { useAppearance } from '@/hooks/use-appearance';
+import { UserAvatar } from '@/components/ui/user-avatar';
 
 type SearchItem = {
     label: string;
@@ -201,7 +202,7 @@ export default function MainNavbar() {
 
                     <div className="col-md-6">
                         <div className="right-header-content mt-3 mt-md-0">
-                            <ul className="d-flex align-items-center justify-content-center justify-content-md-end ps-0 mb-0 list-unstyled">
+                            <ul className="d-flex align-items-center justify-content-center justify-content-md-end ps-0 mb-0 list-unstyled gap-2">
                                 {/* Dark Mode */}
                                 <li className="header-right-item light-dark-item">
                                     <div className="light-dark">
@@ -223,6 +224,108 @@ export default function MainNavbar() {
                                     </div>
                                 </li>
 
+                                {/* Notification Dropdown */}
+                                <li className="header-right-item notification-item">
+                                    <div className="dropdown notifications position-relative">
+                                        <button
+                                            className="btn btn-transparent p-0 border-0 position-relative d-flex align-items-center justify-content-center text-body rounded-circle"
+                                            type="button"
+                                            data-bs-toggle="dropdown"
+                                            aria-expanded="false"
+                                            aria-label="Notifications"
+                                            style={{ width: '40px', height: '40px' }}
+                                        >
+                                            <i className="material-symbols-outlined fs-24">notifications</i>
+                                            {((auth as any)?.unread_notifications_count || 0) > 0 && (
+                                                <span
+                                                    className="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger border border-2 border-white d-flex align-items-center justify-content-center"
+                                                    style={{ fontSize: '10px', minWidth: '18px', height: '18px', padding: '2px 4px' }}
+                                                >
+                                                    {((auth as any)?.unread_notifications_count || 0) > 99
+                                                        ? '99+'
+                                                        : (auth as any)?.unread_notifications_count}
+                                                </span>
+                                            )}
+                                        </button>
+
+                                        <div
+                                            className="dropdown-menu dropdown-menu-end border-0 shadow-lg rounded-3 p-0 mt-2"
+                                            style={{ width: '340px', maxWidth: '90vw' }}
+                                        >
+                                            <div className="d-flex align-items-center justify-content-between p-3 border-bottom">
+                                                <h6 className="mb-0 fw-semibold fs-15 text-dark">
+                                                    Notifications{' '}
+                                                    {((auth as any)?.unread_notifications_count || 0) > 0 && (
+                                                        <span className="badge bg-primary-subtle text-primary ms-1">
+                                                            {(auth as any)?.unread_notifications_count} New
+                                                        </span>
+                                                    )}
+                                                </h6>
+                                                <Link
+                                                    href="/admin/notifications"
+                                                    className="fs-13 text-primary text-decoration-none fw-medium"
+                                                >
+                                                    View All
+                                                </Link>
+                                            </div>
+
+                                            <div className="notification-list" style={{ maxHeight: '300px', overflowY: 'auto' }}>
+                                                {((auth as any)?.recent_notifications || []).length > 0 ? (
+                                                    (auth as any)?.recent_notifications.map((notif: any) => {
+                                                        const data = notif.data || {};
+                                                        const title = data.title || 'Notification Alert';
+                                                        const message = data.message || data.body || 'You have a new update';
+                                                        const isUnread = !notif.read_at;
+
+                                                        return (
+                                                            <Link
+                                                                key={notif.id}
+                                                                href="/admin/notifications"
+                                                                className={`d-flex align-items-start gap-2 p-3 border-bottom text-decoration-none text-body transition ${
+                                                                    isUnread ? 'bg-light' : 'bg-white'
+                                                                }`}
+                                                                style={{
+                                                                    borderLeft: isUnread ? '3px solid var(--bs-primary, #4f46e5)' : '3px solid transparent',
+                                                                }}
+                                                            >
+                                                                <div
+                                                                    className="rounded-circle bg-primary-subtle text-primary p-2 d-flex align-items-center justify-content-center flex-shrink-0"
+                                                                    style={{ width: '36px', height: '36px' }}
+                                                                >
+                                                                    <i className="material-symbols-outlined fs-18">notifications</i>
+                                                                </div>
+                                                                <div className="flex-grow-1 overflow-hidden">
+                                                                    <div className="fw-semibold fs-13 text-truncate mb-1">{title}</div>
+                                                                    <div className="text-muted fs-12 text-truncate mb-1">{message}</div>
+                                                                    <small className="text-secondary" style={{ fontSize: '11px' }}>
+                                                                        {notif.created_at}
+                                                                    </small>
+                                                                </div>
+                                                            </Link>
+                                                        );
+                                                    })
+                                                ) : (
+                                                    <div className="p-4 text-center text-muted">
+                                                        <i className="material-symbols-outlined fs-36 d-block mb-1 text-secondary opacity-50">
+                                                            notifications_off
+                                                        </i>
+                                                        <span className="fs-13">No notifications right now</span>
+                                                    </div>
+                                                )}
+                                            </div>
+
+                                            <div className="p-2 border-top text-center bg-light rounded-bottom-3">
+                                                <Link
+                                                    href="/admin/notifications"
+                                                    className="btn btn-sm btn-link text-primary text-decoration-none fw-medium fs-13 w-100"
+                                                >
+                                                    See all notifications →
+                                                </Link>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </li>
+
                                 {/* Profile */}
                                 <li className="header-right-item">
                                     <div className="dropdown admin-profile">
@@ -231,67 +334,52 @@ export default function MainNavbar() {
                                             data-bs-toggle="dropdown"
                                         >
                                             <div className="flex-shrink-0 position-relative">
-                                                <img
-                                                    alt="admin"
-                                                    className="rounded-circle admin-img-width-for-mobile"
-                                                    src={auth?.user?.avatar ? `/${auth.user.avatar}` : '/backend/assets/images/placholder.png'}
-                                                    style={{
-                                                        width: '40px',
-                                                        height: '40px',
-                                                    }}
-                                                />
-
-                                                <span
-                                                    className="d-block bg-success-60 border border-2 border-white rounded-circle position-absolute end-0 bottom-0"
-                                                    style={{
-                                                        width: '11px',
-                                                        height: '11px',
-                                                    }}
+                                                <UserAvatar
+                                                    src={auth?.user?.avatar}
+                                                    name={[auth?.user?.first_name, auth?.user?.last_name].filter(Boolean).join(' ') || 'Admin'}
+                                                    size={40}
+                                                    showStatus
                                                 />
                                             </div>
                                         </div>
 
-                                        <div className="dropdown-menu border-0 bg-white dropdown-menu-end">
-                                            <div className="d-flex align-items-center info">
+                                        <div className="dropdown-menu border-0 bg-white dropdown-menu-end shadow-lg rounded-3">
+                                            <div className="d-flex align-items-center info p-3 border-bottom">
                                                 <div className="flex-shrink-0">
-                                                    <img
-                                                        alt="admin"
-                                                        className="rounded-circle"
-                                                        src={auth?.user?.avatar ? `/${auth.user.avatar}` : '/backend/assets/images/placholder.png'}
-                                                        style={{
-                                                            width: '40px',
-                                                            height: '40px',
-                                                        }}
+                                                    <UserAvatar
+                                                        src={auth?.user?.avatar}
+                                                        name={[auth?.user?.first_name, auth?.user?.last_name].filter(Boolean).join(' ') || 'Admin'}
+                                                        size={40}
                                                     />
                                                 </div>
-                                                <div className="flex-grow-1 ms-10">
-                                                    <h3 className="fw-medium fs-17 mb-0">
+                                                <div className="flex-grow-1 ms-10 ps-2">
+                                                    <h3 className="fw-medium fs-16 mb-0">
                                                         {[auth?.user?.first_name, auth?.user?.last_name]
                                                             .filter(Boolean)
                                                             .join(' ') || 'User'}
                                                     </h3>
 
-                                                    <span className="fs-15 fw-medium">
-                                                        {auth?.user?.role.toUpperCase() || 'Admin'}
+                                                    <span className="fs-13 text-muted fw-medium">
+                                                        {auth?.user?.role?.toUpperCase() || 'ADMIN'}
                                                     </span>
                                                 </div>
                                             </div>
-                                            <ul className="admin-link mb-0 list-unstyled">
+                                            <ul className="admin-link mb-0 list-unstyled p-2">
                                                 <li>
                                                     <a
-                                                        className="dropdown-item admin-item-link d-flex align-items-center text-body"
+                                                        className="dropdown-item admin-item-link d-flex align-items-center text-body rounded-2 py-2"
                                                         href={'/admin/profile'}
                                                     >
-                                                        <i className="material-symbols-outlined">person</i>
+                                                        <i className="material-symbols-outlined fs-20">person</i>
                                                         <span className="ms-2">My Profile</span>
                                                     </a>
                                                 </li>
                                                 <li>
                                                     <Link
-                                                        className="dropdown-item admin-item-link d-flex align-items-center text-body"
+                                                        className="dropdown-item admin-item-link d-flex align-items-center text-body rounded-2 py-2"
                                                         href={logout()}
                                                     >
-                                                        <i className="material-symbols-outlined">logout</i>
+                                                        <i className="material-symbols-outlined fs-20">logout</i>
                                                         <span className="ms-2">Logout</span>
                                                     </Link>
                                                 </li>

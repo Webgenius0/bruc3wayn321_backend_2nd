@@ -45,6 +45,15 @@ class HandleInertiaRequests extends Middleware
             'dark_logo' => $setting?->dark_logo,
             'auth' => [
                 'user' => $request->user(),
+                'unread_notifications_count' => fn() => $request->user() ? $request->user()->unreadNotifications()->count() : 0,
+                'recent_notifications' => fn() => $request->user() ? $request->user()->notifications()->latest()->take(5)->get()->map(function ($n) {
+                    return [
+                        'id' => $n->id,
+                        'data' => $n->data,
+                        'read_at' => $n->read_at,
+                        'created_at' => $n->created_at?->diffForHumans() ?? 'Just now',
+                    ];
+                }) : [],
             ],
             'flash' => [
                 'success' => fn() => $request->session()->get('success'),

@@ -1,6 +1,7 @@
 import { router, usePage } from "@inertiajs/react";
 import './messages.css';
 import type { Auth } from '@/types';
+import { UserAvatar } from '@/components/ui/user-avatar';
 
 interface User {
     id: number;
@@ -146,21 +147,13 @@ export default function Messages({ chats, selectedChat, messages }: Props) {
                                         <div className="flex-shrink-0 position-relative">
                                             <div className="d-flex align-items-center">
                                                 {chat.users.slice(0, 2).map((user) => (
-                                                    <img
+                                                    <UserAvatar
                                                         key={user.id}
-                                                        src={
-                                                            user.avatar
-                                                                ? `/${user.avatar}`
-                                                                : "/backend/assets/images/placholder.png"
-                                                        }
-                                                        alt={user.first_name}
-                                                        className="rounded-circle border border-white"
-                                                        style={{
-                                                            width: 45,
-                                                            height: 45,
-                                                            objectFit: "cover",
-                                                            marginLeft: "-8px",
-                                                        }}
+                                                        src={user.avatar}
+                                                        name={`${user.first_name || ''} ${user.last_name || ''}`.trim() || 'User'}
+                                                        size={45}
+                                                        className="border border-white"
+                                                        style={{ marginLeft: "-8px" }}
                                                     />
                                                 ))}
                                             </div>
@@ -208,9 +201,12 @@ export default function Messages({ chats, selectedChat, messages }: Props) {
                             {selectedChat.users.map((user) => (
                                 <div key={user.id} className="d-flex align-items-center">
                                     <div className="flex-shrink-0 position-relative">
-                                        <img alt={user.first_name} className="rounded-circle" src={user.avatar ? `/${user.avatar}` : "/backend/assets/images/placholder.png"} style={{ width: "65px", height: "65px", objectFit: "cover" }} />
-                                        <span className="d-block border border-2 border-white bg-success rounded-circle position-absolute bottom-0 end-0" style={{ width: "10px", height: "10px", bottom: "5px !important", right: "3px !important" }}>
-                                        </span>
+                                        <UserAvatar
+                                            src={user.avatar}
+                                            name={`${user.first_name || ''} ${user.last_name || ''}`.trim() || 'User'}
+                                            size={60}
+                                            showStatus
+                                        />
                                     </div>
                                     <div className="flex-grow-1 ms-3 position-relative top-3">
                                         <h4 className="fs-18 fw-medium mb-0">
@@ -254,18 +250,10 @@ export default function Messages({ chats, selectedChat, messages }: Props) {
                                                     </div>
 
                                                     <div className="flex-shrink-0 ms-10">
-                                                        <img
-                                                            src={
-                                                                msgUser.avatar
-                                                                    ? `/${msgUser.avatar}`
-                                                                    : "/backend/assets/images/placholder.png"
-                                                            }
-                                                            className="rounded-circle"
-                                                            style={{
-                                                                width: 35,
-                                                                height: 35,
-                                                                objectFit: "cover",
-                                                            }}
+                                                        <UserAvatar
+                                                            src={msgUser.avatar}
+                                                            name={`${msgUser.first_name || ''} ${msgUser.last_name || ''}`.trim() || 'User'}
+                                                            size={35}
                                                         />
                                                     </div>
                                                 </div>
@@ -276,19 +264,11 @@ export default function Messages({ chats, selectedChat, messages }: Props) {
                                     return (
                                         <li key={msg.id} className="mb-20">
                                             <div className="d-flex">
-                                                <div className="flex-shrink-0">
-                                                    <img
-                                                        src={
-                                                            msg.sender.avatar
-                                                                ? `/${msg.sender.avatar}`
-                                                                : "/backend/assets/images/placholder.png"
-                                                        }
-                                                        className="rounded-circle"
-                                                        style={{
-                                                            width: 35,
-                                                            height: 35,
-                                                            objectFit: "cover",
-                                                        }}
+                                                <div className="flex-shrink-0 me-10">
+                                                    <UserAvatar
+                                                        src={msg.sender?.avatar}
+                                                        name={`${msg.sender?.first_name || ''} ${msg.sender?.last_name || ''}`.trim() || 'User'}
+                                                        size={35}
                                                     />
                                                 </div>
 
