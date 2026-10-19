@@ -1,4 +1,5 @@
 import { Head } from "@inertiajs/react";
+import { PostThumbnail } from "@/components/ui/post-thumbnail";
 
 interface user {
     id: number;
@@ -125,10 +126,13 @@ export default function Show({ post }: Props) {
                                                         className="col-md-3 mb-3"
                                                         key={index}
                                                     >
-                                                        <img
-                                                            src={"/"+image}
-                                                            alt={`Post ${index}`}
-                                                            className="img-fluid rounded border"
+                                                        <PostThumbnail
+                                                            src={image}
+                                                            alt={`Post Image ${index + 1}`}
+                                                            width="100%"
+                                                            height={200}
+                                                            rounded="8px"
+                                                            className="w-100"
                                                         />
                                                     </div>
                                                 )

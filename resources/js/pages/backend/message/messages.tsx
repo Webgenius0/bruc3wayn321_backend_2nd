@@ -118,7 +118,7 @@ export default function Messages({ chats, selectedChat, messages }: Props) {
 
         <div className="row">
             <div className="col-lg-3 col-xxl-3">
-                <div className="card bg-white rounded-10 border border-white mb-4 pb-20">
+                <div className="card rounded-10 mb-4 pb-20">
                     <div className="p-20 pb-10">
                         <h3 className="mb-20">
                             Messages
@@ -196,7 +196,7 @@ export default function Messages({ chats, selectedChat, messages }: Props) {
 
             <div className={selectedChat ? "col-lg-6 col-xxl-6" : "col-lg-9 col-xxl-9"}>
                 {selectedChat ? (
-                    <div className="card bg-white rounded-10 border border-white mb-4">
+                    <div className="card rounded-10 mb-4">
                         <div className="p-20 d-flex justify-content-between align-items-center border-bottom border-border-color-60 chat-header">
                             {selectedChat.users.map((user) => (
                                 <div key={user.id} className="d-flex align-items-center">
@@ -232,14 +232,7 @@ export default function Messages({ chats, selectedChat, messages }: Props) {
                                                 <div className="d-flex text-end">
                                                     <div className="flex-grow-1">
                                                         <div>
-                                                            <p
-                                                                className="lh-1-8 bg-primary text-white fs-16 d-inline-block"
-                                                                style={{
-                                                                    padding: "10px 15px",
-                                                                    borderRadius: "10px 0 10px 10px",
-                                                                    marginBottom: "6px",
-                                                                }}
-                                                            >
+                                                            <p className="lh-1-8 chat-bubble-sent fs-16 d-inline-block">
                                                                 <MessageFormatter text={msg.message} />
                                                             </p>
                                                         </div>
@@ -275,14 +268,7 @@ export default function Messages({ chats, selectedChat, messages }: Props) {
                                                 <div className="flex-grow-1 ms-10">
                                                     <div>
                                                         <p className="mb-0" style={{ fontSize: "14px" }}>{msg.sender.first_name} {msg.sender.last_name}</p>
-                                                        <p
-                                                            className="lh-1-8 bg-light fs-16 d-inline-block"
-                                                            style={{
-                                                                padding: "10px 15px",
-                                                                borderRadius: "0 10px 10px 10px",
-                                                                marginBottom: "6px",
-                                                            }}
-                                                        >
+                                                        <p className="lh-1-8 chat-bubble-received fs-16 d-inline-block">
                                                             <MessageFormatter text={msg.message} />
                                                         </p>
                                                     </div>
@@ -300,7 +286,7 @@ export default function Messages({ chats, selectedChat, messages }: Props) {
 
                     </div>
                 ) : (
-                    <div className="card bg-white rounded-10 border border-white mb-4 d-flex align-items-center justify-content-center" style={{ height: "100%" }}>
+                    <div className="card rounded-10 mb-4 d-flex align-items-center justify-content-center" style={{ height: "100%" }}>
                         <p className="fs-18 text-muted">Select a chat to view messages</p>
                     </div>
                 )}
@@ -309,15 +295,15 @@ export default function Messages({ chats, selectedChat, messages }: Props) {
 
             <div className="col-lg-3 col-xxl-3">
                 {selectedChat && (
-                    <div className="card bg-white rounded-10 border border-white mb-4 pb-20">
+                    <div className="card rounded-10 mb-4 pb-20">
                         <div className="p-20">
                             <div className="p-3">
                                 <h5>Conversation Info</h5>
-                                <table className="table table-sm">
-                                    <tbody >
-                                        <tr><td className="bg-white">Participants</td><td className="text-end bg-white">{selectedChat.users.length + 1}</td></tr>
-                                        <tr><td className="bg-white">Status</td><td className="text-end bg-white"><span className="badge bg-success">Active</span></td></tr>
-                                        <tr><td className="bg-white">Total Messages</td><td className="text-end bg-white">{messages.length}</td></tr>
+                                <table className="table table-sm conversation-info-table">
+                                    <tbody>
+                                        <tr><td>Participants</td><td className="text-end">{selectedChat.users.length + 1}</td></tr>
+                                        <tr><td>Status</td><td className="text-end"><span className="badge bg-success">Active</span></td></tr>
+                                        <tr><td>Total Messages</td><td className="text-end">{messages.length}</td></tr>
                                     </tbody>
                                 </table>
 

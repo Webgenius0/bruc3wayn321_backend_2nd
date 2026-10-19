@@ -169,7 +169,7 @@ export default function MainNavbar() {
                                         </button>
 
                                         {isSearchFocused && (
-                                            <div className="position-absolute top-100 start-0 w-100 mt-2 rounded-10 border border-light bg-white shadow-sm z-3" style={{ maxHeight: '280px', overflowY: 'auto' }}>
+                                            <div className="position-absolute top-100 start-0 w-100 mt-2 rounded-10 border shadow-sm z-3 header-search-menu" style={{ maxHeight: '280px', overflowY: 'auto' }}>
                                                 {filteredSearchItems.length > 0 ? (
                                                     filteredSearchItems.map((item) => (
                                                         <button
@@ -225,22 +225,18 @@ export default function MainNavbar() {
                                 </li>
 
                                 {/* Notification Dropdown */}
-                                <li className="header-right-item notification-item">
-                                    <div className="dropdown notifications position-relative">
+                                <li className="header-right-item">
+                                    <div className="dropdown notifications noti">
                                         <button
-                                            className="btn btn-transparent p-0 border-0 position-relative d-flex align-items-center justify-content-center text-body rounded-circle"
+                                            className="btn btn-secondary border-0 p-0 position-relative"
                                             type="button"
                                             data-bs-toggle="dropdown"
                                             aria-expanded="false"
                                             aria-label="Notifications"
-                                            style={{ width: '40px', height: '40px' }}
                                         >
-                                            <i className="material-symbols-outlined fs-24">notifications</i>
+                                            <span className="material-symbols-outlined">notifications</span>
                                             {((auth as any)?.unread_notifications_count || 0) > 0 && (
-                                                <span
-                                                    className="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger border border-2 border-white d-flex align-items-center justify-content-center"
-                                                    style={{ fontSize: '10px', minWidth: '18px', height: '18px', padding: '2px 4px' }}
-                                                >
+                                                <span className="count">
                                                     {((auth as any)?.unread_notifications_count || 0) > 99
                                                         ? '99+'
                                                         : (auth as any)?.unread_notifications_count}
@@ -249,27 +245,27 @@ export default function MainNavbar() {
                                         </button>
 
                                         <div
-                                            className="dropdown-menu dropdown-menu-end border-0 shadow-lg rounded-3 p-0 mt-2"
-                                            style={{ width: '340px', maxWidth: '90vw' }}
+                                            className="dropdown-menu dropdown-menu-end p-0 border-0"
+                                            style={{ width: '320px', maxWidth: '90vw' }}
                                         >
-                                            <div className="d-flex align-items-center justify-content-between p-3 border-bottom">
-                                                <h6 className="mb-0 fw-semibold fs-15 text-dark">
+                                            <div className="d-flex justify-content-between align-items-center title p-3 border-bottom">
+                                                <span className="fw-medium fs-16 text-secondary mb-0">
                                                     Notifications{' '}
                                                     {((auth as any)?.unread_notifications_count || 0) > 0 && (
-                                                        <span className="badge bg-primary-subtle text-primary ms-1">
-                                                            {(auth as any)?.unread_notifications_count} New
+                                                        <span className="fw-normal text-body fs-14">
+                                                            ({(auth as any)?.unread_notifications_count})
                                                         </span>
                                                     )}
-                                                </h6>
+                                                </span>
                                                 <Link
                                                     href="/admin/notifications"
-                                                    className="fs-13 text-primary text-decoration-none fw-medium"
+                                                    className="p-0 m-0 bg-transparent border-0 fs-13 text-primary fw-medium text-decoration-none"
                                                 >
                                                     View All
                                                 </Link>
                                             </div>
 
-                                            <div className="notification-list" style={{ maxHeight: '300px', overflowY: 'auto' }}>
+                                            <div style={{ maxHeight: '300px', overflowY: 'auto' }}>
                                                 {((auth as any)?.recent_notifications || []).length > 0 ? (
                                                     (auth as any)?.recent_notifications.map((notif: any) => {
                                                         const data = notif.data || {};
@@ -278,30 +274,32 @@ export default function MainNavbar() {
                                                         const isUnread = !notif.read_at;
 
                                                         return (
-                                                            <Link
+                                                            <div
                                                                 key={notif.id}
-                                                                href="/admin/notifications"
-                                                                className={`d-flex align-items-start gap-2 p-3 border-bottom text-decoration-none text-body transition ${
-                                                                    isUnread ? 'bg-light' : 'bg-white'
-                                                                }`}
-                                                                style={{
-                                                                    borderLeft: isUnread ? '3px solid var(--bs-primary, #4f46e5)' : '3px solid transparent',
-                                                                }}
+                                                                className={`notification-menu ${isUnread ? 'unseen' : ''}`}
                                                             >
-                                                                <div
-                                                                    className="rounded-circle bg-primary-subtle text-primary p-2 d-flex align-items-center justify-content-center flex-shrink-0"
-                                                                    style={{ width: '36px', height: '36px' }}
+                                                                <Link
+                                                                    href="/admin/notifications"
+                                                                    className="dropdown-item d-flex align-items-start gap-2"
                                                                 >
-                                                                    <i className="material-symbols-outlined fs-18">notifications</i>
-                                                                </div>
-                                                                <div className="flex-grow-1 overflow-hidden">
-                                                                    <div className="fw-semibold fs-13 text-truncate mb-1">{title}</div>
-                                                                    <div className="text-muted fs-12 text-truncate mb-1">{message}</div>
-                                                                    <small className="text-secondary" style={{ fontSize: '11px' }}>
-                                                                        {notif.created_at}
-                                                                    </small>
-                                                                </div>
-                                                            </Link>
+                                                                    <div className="flex-shrink-0 mt-1">
+                                                                        <i className="material-symbols-outlined text-primary">
+                                                                            notifications
+                                                                        </i>
+                                                                    </div>
+                                                                    <div className="flex-grow-1 overflow-hidden">
+                                                                        <p className="fs-14 fw-medium text-secondary mb-1 text-truncate">
+                                                                            {title}
+                                                                        </p>
+                                                                        <span className="fs-12 d-block text-truncate text-muted mb-1" style={{ lineHeight: 1.4 }}>
+                                                                            {message}
+                                                                        </span>
+                                                                        <small className="fs-11 text-muted">
+                                                                            {notif.created_at}
+                                                                        </small>
+                                                                    </div>
+                                                                </Link>
+                                                            </div>
                                                         );
                                                     })
                                                 ) : (
@@ -314,14 +312,12 @@ export default function MainNavbar() {
                                                 )}
                                             </div>
 
-                                            <div className="p-2 border-top text-center bg-light rounded-bottom-3">
-                                                <Link
-                                                    href="/admin/notifications"
-                                                    className="btn btn-sm btn-link text-primary text-decoration-none fw-medium fs-13 w-100"
-                                                >
-                                                    See all notifications →
-                                                </Link>
-                                            </div>
+                                            <Link
+                                                href="/admin/notifications"
+                                                className="dropdown-item text-center text-primary d-block view-all fw-medium rounded-bottom-3 py-2 text-decoration-none border-top"
+                                            >
+                                                <span>See all notifications →</span>
+                                            </Link>
                                         </div>
                                     </div>
                                 </li>
@@ -343,7 +339,7 @@ export default function MainNavbar() {
                                             </div>
                                         </div>
 
-                                        <div className="dropdown-menu border-0 bg-white dropdown-menu-end shadow-lg rounded-3">
+                                        <div className="dropdown-menu border-0 dropdown-menu-end shadow-lg rounded-3">
                                             <div className="d-flex align-items-center info p-3 border-bottom">
                                                 <div className="flex-shrink-0">
                                                     <UserAvatar

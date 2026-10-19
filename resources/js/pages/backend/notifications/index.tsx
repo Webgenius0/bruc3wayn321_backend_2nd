@@ -93,10 +93,10 @@ export default function NotificationsIndex({ notifications, filters }: Props) {
                                 href="/admin/dashboard"
                                 className="text-decoration-none d-flex align-items-center"
                             >
-                                <i className="material-symbols-outlined fs-24 text-dark" style={{
+                                <i className="material-symbols-outlined fs-24 text-secondary" style={{
                                     width: "40px",
                                     height: "40px",
-                                    backgroundColor: "rgb(255, 255, 255)",
+                                    backgroundColor: "rgba(148, 163, 184, 0.15)",
                                     display: "flex",
                                     justifyContent: "center",
                                     alignItems: "center",
@@ -112,15 +112,15 @@ export default function NotificationsIndex({ notifications, filters }: Props) {
                         {/* Filter Area */}
                         <div className="d-flex justify-content-between align-items-center mb-4 gap-3 flex-wrap">
                             <div className="d-flex align-items-center gap-2">
-                                <label className="fw-medium text-dark mb-0 text-nowrap">Date:</label>
+                                <label className="fw-medium text-secondary mb-0 text-nowrap">Date:</label>
                                 <div className="d-flex align-items-center gap-2">
                                     <input
                                         type="date"
                                         className="form-control"
                                         value={date}
                                         onChange={(e) => {
-                                            setDate(e.target.value);
-                                            handleFilterChange(e.target.value, perPage);
+                                             setDate(e.target.value);
+                                             handleFilterChange(e.target.value, perPage);
                                         }}
                                         style={{ width: 'auto' }}
                                     />
@@ -140,7 +140,7 @@ export default function NotificationsIndex({ notifications, filters }: Props) {
                                 </div>
                             </div>
                             <div className="d-flex align-items-center gap-2">
-                                <label className="fw-medium text-dark mb-0 text-nowrap">Show:</label>
+                                <label className="fw-medium text-secondary mb-0 text-nowrap">Show:</label>
                                 <select
                                     className="form-select"
                                     value={perPage}
@@ -162,47 +162,54 @@ export default function NotificationsIndex({ notifications, filters }: Props) {
                         {/* Notifications List */}
                         <div className="d-flex flex-column gap-3">
                             {notifications.data.length === 0 ? (
-                                <div className="card bg-white p-40 rounded-10 border border-white text-center">
+                                <div className="card p-40 rounded-10 text-center">
                                     <div className="bg-warning bg-opacity-10 text-warning text-center rounded-circle d-inline-flex align-items-center justify-content-center mb-3" style={{ width: "80px", height: "80px" }}>
                                         <i className="material-symbols-outlined fs-40">notifications_off</i>
                                     </div>
-                                    <h3 className="fs-18 fw-medium text-dark mb-2">No Notifications</h3>
+                                    <h3 className="fs-18 fw-medium text-secondary mb-2">No Notifications</h3>
                                     <p className="text-secondary fs-14">You are all caught up! When you receive alerts, they will appear here.</p>
                                 </div>
                             ) : (
-                                notifications.data.map((notification) => (
-                                    <div
-                                        key={notification.id}
-                                        className={`card card-body rounded-20 border border-0 shadow-sm d-flex flex-row align-items-start gap-3 ${!notification.read_at ? 'bg-white' : 'bg-light'}`}
-                                        style={{ backgroundColor: !notification.read_at ? '#f4f6f8' : '#ffffff' }}
-                                    >
-                                        {/* Yellow Bell Icon */}
+                                notifications.data.map((notification) => {
+                                    const isUnread = !notification.read_at;
+                                    return (
                                         <div
-                                            className="d-flex align-items-center justify-content-center rounded-circle flex-shrink-0"
+                                            key={notification.id}
+                                            className={`card card-body rounded-20 shadow-sm d-flex flex-row align-items-start gap-3 notification-card ${
+                                                isUnread ? 'notification-unread' : 'notification-read'
+                                            }`}
                                             style={{
-                                                width: '56px',
-                                                height: '56px',
-                                                backgroundColor: '#FEF3C7', // soft yellow light tint
-                                                color: '#D97706' // dark yellow warning tone
+                                                borderLeft: isUnread ? '4px solid #f59e0b' : '4px solid transparent',
                                             }}
                                         >
-                                            <i className="material-symbols-outlined fs-26">notifications</i>
-                                        </div>
+                                            {/* Yellow Bell Icon */}
+                                            <div
+                                                className="d-flex align-items-center justify-content-center rounded-circle flex-shrink-0"
+                                                style={{
+                                                    width: '56px',
+                                                    height: '56px',
+                                                    backgroundColor: 'rgba(245, 158, 11, 0.15)',
+                                                    color: '#f59e0b'
+                                                }}
+                                            >
+                                                <i className="material-symbols-outlined fs-26">notifications</i>
+                                            </div>
 
-                                        {/* Content details */}
-                                        <div className="flex-grow-1">
-                                            <h4 className="fs-16 fw-semibold text-dark mb-2">
-                                                {notification.data.title || 'Notification Alert'}
-                                            </h4>
-                                            <p className="text-secondary fs-14 mb-2 lh-base">
-                                                {notification.data.message}
-                                            </p>
-                                            <span className="text-muted fs-12">
-                                                {getRelativeTime(notification.created_at)}
-                                            </span>
+                                            {/* Content details */}
+                                            <div className="flex-grow-1">
+                                                <h4 className="fs-16 fw-semibold text-secondary mb-2">
+                                                    {notification.data.title || 'Notification Alert'}
+                                                </h4>
+                                                <p className="text-secondary fs-14 mb-2 lh-base">
+                                                    {notification.data.message}
+                                                </p>
+                                                <span className="text-muted fs-12">
+                                                    {getRelativeTime(notification.created_at)}
+                                                </span>
+                                            </div>
                                         </div>
-                                    </div>
-                                ))
+                                    );
+                                })
                             )}
                         </div>
 
