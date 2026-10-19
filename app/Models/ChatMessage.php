@@ -4,10 +4,12 @@ namespace App\Models;
 
 use App\Models\Chat;
 use App\Models\ChatMessageAttachment;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
 class ChatMessage extends Model
 {
+    use HasFactory;
     protected $fillable = [
         "chat_id",
         "sender_id",

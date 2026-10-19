@@ -18,8 +18,19 @@ $setting = \App\Models\Setting::first();
 
             document.documentElement.classList.toggle('dark', isDark);
             document.documentElement.style.colorScheme = theme;
-            document.body.setAttribute('data-theme', theme);
-            document.body.setAttribute('sidebar-data-theme', 'sidebar-show');
+
+            const applyBodyTheme = function() {
+                if (document.body) {
+                    document.body.setAttribute('data-theme', theme);
+                    document.body.setAttribute('sidebar-data-theme', 'sidebar-show');
+                }
+            };
+
+            if (document.body) {
+                applyBodyTheme();
+            } else {
+                document.addEventListener('DOMContentLoaded', applyBodyTheme);
+            }
         })();
     </script>
 

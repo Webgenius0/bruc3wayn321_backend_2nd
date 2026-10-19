@@ -27,3 +27,10 @@ Route::middleware('auth:sanctum')->group(function () {
 });
 
 Route::post('/webhooks/revenuecat', [SubscriptionApiController::class, 'webhook']);
+
+// =========================================================================
+// TEMPORARY TESTING ROUTES (Comment out or delete after frontend testing)
+// =========================================================================
+Route::post('/subscription/test-expire/{userId?}', [SubscriptionApiController::class, 'testExpire']);
+Route::post('/subscription/test-reset-trial/{userId?}', [SubscriptionApiController::class, 'testResetTrial']);
+
