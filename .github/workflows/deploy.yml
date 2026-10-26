@@ -30,8 +30,8 @@ jobs:
             git reset --hard origin/main
             # 3. Dependencies & Frontend Build
             composer install --no-dev --optimize-autoloader --no-interaction
-            pnpm install
-            pnpm run build
+            npm install
+            npm run build
             # 4. Database & Optimization
             php artisan migrate --force
             php artisan optimize:clear

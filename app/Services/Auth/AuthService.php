@@ -34,18 +34,24 @@ class AuthService
 
         if ($exists) {
             if ($exists->email_verified_at != null) {
-                throw new \Exception('Email already verified');
+                throw ValidationException::withMessages([
+                    'email' => ['This email is already registered and verified. Please log in.']
+                ]);
             }
+
             $otp = (new Otp)->generate($data['email'], 'numeric', 4, 15);
 
-            Mail::to($data['email'])->send(new VerifyRegister($exists, $otp->token));
+            try {
+                Mail::to($data['email'])->send(new VerifyRegister($exists, $otp->token));
+            } catch (\Throwable $e) {
+                Log::error("Failed to send registration OTP email: " . $e->getMessage());
+            }
 
             return [
                 'token' => $otp->token,
-                'user' => $exists,
+                'user' => $exists->fresh(),
             ];
         }
-
 
         if (!empty($data['avatar'])) {
             $data = $this->repository->uploadAvatar($data);
@@ -59,14 +65,23 @@ class AuthService
         } while (User::where('user_name', $userName)->exists());
 
         $data['user_name'] = $userName;
-
-        // dd($data);
+        $data['email_visibility'] = true;
+        $data['phone_visibility'] = true;
+        $data['status'] = true;
+        $data['role'] = 'user';
 
         $user = $this->repository->createUser($data);
         $otp = (new Otp)->generate($data['email'], 'numeric', 4, 15);
+
+        try {
+            Mail::to($data['email'])->send(new VerifyRegister($user, $otp->token));
+        } catch (\Throwable $e) {
+            Log::error("Failed to send registration OTP email: " . $e->getMessage());
+        }
+
         return [
             'token' => $otp->token,
-            'user' => $user,
+            'user' => $user->fresh(),
         ];
     }
 
@@ -75,16 +90,28 @@ class AuthService
         $user = $this->repository->findByEmail($data['email']);
 
         if (!$user) {
-            throw new Exception('User not found.');
+            throw ValidationException::withMessages([
+                'email' => ['No account found with this email address.']
+            ]);
         }
 
+        if ($user->email_verified_at != null) {
+            throw ValidationException::withMessages([
+                'email' => ['This email is already verified. Please log in.']
+            ]);
+        }
 
         $otp = (new Otp)->generate($data['email'], 'numeric', 4, 15);
 
-        Mail::to($user->email)->send(new VerifyRegister($user, $otp->token));
+        try {
+            Mail::to($data['email'])->send(new VerifyRegister($user, $otp->token));
+        } catch (\Throwable $e) {
+            Log::error("Failed to resend registration OTP email: " . $e->getMessage());
+        }
 
         return [
-            'email' => $user->email,
+            'email' => $data['email'],
+            'token' => $otp->token,
         ];
     }
 
@@ -93,7 +120,9 @@ class AuthService
         $user = $this->repository->findByEmail($data['email']);
 
         if (!$user) {
-            throw new \Exception('User not found');
+            throw ValidationException::withMessages([
+                'email' => ['User not found.']
+            ]);
         }
 
         if (!$user->email_verified_at) {
@@ -102,8 +131,11 @@ class AuthService
             ]);
         }
 
-        Mail::to($user->email)->send(new WelcomeMail($user->name));
-
+        try {
+            Mail::to($data['email'])->send(new WelcomeMail($user->name));
+        } catch (\Throwable $e) {
+            Log::warning("Failed to send welcome email: " . $e->getMessage());
+        }
 
         $token = $user->createToken('api-token')->plainTextToken;
 
@@ -112,7 +144,6 @@ class AuthService
             'user'  => $user->fresh(),
         ];
     }
-
 
     public function login(array $credentials)
     {
@@ -123,11 +154,13 @@ class AuthService
         }
 
         $auth = Auth::user();
-
         $user = User::find($auth->id);
 
         if ($user->email_verified_at == null) {
-            throw new \Exception('User email not Verified');
+            Auth::logout();
+            throw ValidationException::withMessages([
+                'email' => ['Your email has not been verified yet. Please verify your email with the OTP sent.']
+            ]);
         }
 
         if (!$user->status) {
@@ -141,42 +174,47 @@ class AuthService
 
         return [
             'token' => $token,
-            'user' => $user,
+            'user' => $user->fresh(),
         ];
     }
 
     public function forgotPassword(string $email): string
     {
-
         $user = $this->repository->findByEmail($email);
 
         if (!$user) {
-            throw new \Exception('User not found');
+            throw ValidationException::withMessages([
+                'email' => ['We could not find an account with that email address.']
+            ]);
         }
+
         $otp = (new Otp)->generate($email, 'numeric', 4, 15);
-        Mail::to($email)->send(new ForgetPassword($user, $otp->token));
+
+        try {
+            Mail::to($email)->send(new ForgetPassword($user, $otp->token));
+        } catch (\Throwable $e) {
+            Log::error("Failed to send forgot password email: " . $e->getMessage());
+        }
 
         return $otp->token;
     }
-
 
     public function verifyForgetPass(array $data): array
     {
         $user = $this->repository->findByEmail($data['email']);
 
         if (!$user) {
-            throw new \Exception('User not found');
+            throw ValidationException::withMessages([
+                'email' => ['User not found.']
+            ]);
         }
 
         // Generate password reset token
         $resetToken = Password::createToken($user);
 
-
-        if ($user) {
-            $user->update([
-                'remember_token' => $resetToken,
-            ]);
-        }
+        $user->update([
+            'remember_token' => $resetToken,
+        ]);
 
         return [
             'reset_token' => $resetToken,

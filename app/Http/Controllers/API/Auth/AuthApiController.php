@@ -41,9 +41,11 @@ class AuthApiController extends Controller
 
     public function registerOtpResend(Request $request)
     {
-        $result = $this->service->resendRegisterOtp(
-            $request->all()
-        );
+        $validated = $request->validate([
+            'email' => ['required', 'email'],
+        ]);
+
+        $result = $this->service->resendRegisterOtp($validated);
 
         return $this->successResponse(
             // 'OTP has been resent to your email address.',
@@ -136,11 +138,7 @@ class AuthApiController extends Controller
             return $this->errorResponse('User not found', 404);
         }
 
-        if ($user->remember_token != $request->reset_token) {
-            return $this->errorResponse('Token is not match', 401);
-        }
-
-        if (!$user->remember_token) {
+        if (!$user->remember_token || $user->remember_token !== $request->reset_token) {
             return $this->errorResponse('Invalid or expired reset token', 422);
         }
 

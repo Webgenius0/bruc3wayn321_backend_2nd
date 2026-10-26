@@ -51,7 +51,13 @@ class User extends Authenticatable implements PasskeyUser
 
     protected $hidden = ['password', 'two_factor_secret', 'two_factor_recovery_codes', 'remember_token'];
 
+    protected $attributes = [
+        'email_visibility' => true,
+        'phone_visibility' => true,
+    ];
+
     protected $appends = [
+        'name',
         'is_subscribed',
         'current_subscription',
         'has_used_free_trial',
@@ -62,6 +68,12 @@ class User extends Authenticatable implements PasskeyUser
         'phone_visibility' => 'boolean',
     ];
 
+
+    public function getNameAttribute(): string
+    {
+        $fullName = trim(($this->first_name ?? '') . ' ' . ($this->last_name ?? ''));
+        return $fullName !== '' ? $fullName : ($this->user_name ?? 'User');
+    }
 
     public function getHasUsedFreeTrialAttribute(): bool
     {
@@ -492,7 +504,7 @@ class User extends Authenticatable implements PasskeyUser
 
     public function getEmailAttribute($value)
     {
-        if ($this->email_visibility) {
+        if ($this->email_visibility ?? true) {
             return $value;
         }
 
@@ -518,7 +530,7 @@ class User extends Authenticatable implements PasskeyUser
 
     public function getPhoneAttribute($value)
     {
-        if ($this->phone_visibility) {
+        if ($this->phone_visibility ?? true) {
             return $value;
         }
 

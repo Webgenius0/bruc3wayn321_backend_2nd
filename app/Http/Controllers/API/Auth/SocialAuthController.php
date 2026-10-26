@@ -6,109 +6,170 @@ use App\Concerns\ApiResponse;
 use App\Http\Controllers\Controller;
 use App\Models\User;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 use Laravel\Socialite\Socialite;
 
 class SocialAuthController extends Controller
 {
     use ApiResponse;
+
     public function socialLogin(Request $request)
     {
         $request->validate([
-            'provider' => 'required',
-            'token' => 'required',
+            'provider'   => 'required|in:google,apple',
+            'token'      => 'required|string',
+            'first_name' => 'nullable|string|max:255',
+            'last_name'  => 'nullable|string|max:255',
+            'name'       => 'nullable|string|max:255',
+            'email'      => 'nullable|email',
         ]);
-        // dd($request->all());
 
         try {
+            $payload = [];
+            if ($request->provider === 'apple') {
+                $jwtParts = explode('.', $request->token);
+                if (count($jwtParts) === 3) {
+                    $payload = json_decode(base64_decode(strtr($jwtParts[1], '-_', '+/')), true) ?: [];
+                }
+
+                // If apple client_id is not set or multiple allowed IDs exist, align it with token aud
+                $configuredClientIds = array_filter(array_map('trim', explode(',', (string) config('services.apple.client_id'))));
+                if (!empty($configuredClientIds)) {
+                    if (isset($payload['aud']) && in_array($payload['aud'], $configuredClientIds, true)) {
+                        config(['services.apple.client_id' => $payload['aud']]);
+                    }
+                } elseif (!empty($payload['aud'])) {
+                    config(['services.apple.client_id' => $payload['aud']]);
+                }
+            }
+
             $socialUser = Socialite::driver($request->provider)->stateless()->userFromToken($request->token);
 
             $raw = method_exists($socialUser, 'getRaw')
                 ? $socialUser->getRaw()
                 : $socialUser->user;
 
-            // dd($raw);
+            $socialId = (string) $socialUser->getId();
+            $email = $socialUser->getEmail() ?: ($payload['email'] ?? $request->input('email'));
 
             $firstName = '';
             $lastName = '';
             $avatar = null;
 
             if ($request->provider === 'apple') {
-
-                $email = $socialUser->getEmail();
-
-                $firstName = $raw['given_name']
-                    ?? $raw['first_name']
-                    ?? Str::title(Str::before($email, '@'));
-
-                $lastName = null;
-
+                if ($request->filled('first_name')) {
+                    $firstName = (string) $request->input('first_name');
+                    $lastName = (string) $request->input('last_name', '');
+                } elseif ($request->filled('name')) {
+                    $nameParts = explode(' ', (string) $request->input('name'), 2);
+                    $firstName = $nameParts[0];
+                    $lastName = $nameParts[1] ?? '';
+                } else {
+                    $firstName = $raw['given_name']
+                        ?? $raw['first_name']
+                        ?? ($email ? Str::title(Str::before($email, '@')) : 'AppleUser');
+                    $lastName = $raw['family_name'] ?? $raw['last_name'] ?? '';
+                }
                 $avatar = null;
             } else {
-
-                $firstName = $raw['given_name']
-                    ?? $raw['first_name']
-                    ?? explode(' ', $socialUser->getName() ?? null, 2)[0];
-
-                $lastName = $raw['family_name']
-                    ?? $raw['last_name']
-                    ?? (explode(' ', $socialUser->getName() ?? null, 2)[1] ?? null);
-
+                if ($request->filled('first_name')) {
+                    $firstName = (string) $request->input('first_name');
+                    $lastName = (string) $request->input('last_name', '');
+                } elseif ($request->filled('name')) {
+                    $nameParts = explode(' ', (string) $request->input('name'), 2);
+                    $firstName = $nameParts[0];
+                    $lastName = $nameParts[1] ?? '';
+                } else {
+                    $fullName = $socialUser->getName() ?: '';
+                    $nameParts = explode(' ', $fullName, 2);
+                    $firstName = $raw['given_name'] ?? $raw['first_name'] ?? ($nameParts[0] ?: 'User');
+                    $lastName = $raw['family_name'] ?? $raw['last_name'] ?? ($nameParts[1] ?? '');
+                }
                 $avatar = $socialUser->getAvatar();
             }
 
-            // Check if user exists
-            $user = User::where('email', $socialUser->getEmail())->first();
+            // 1. Check if user exists by provider & social_id
+            $user = User::where('provider', $request->provider)
+                ->where('social_id', $socialId)
+                ->first();
 
-            if (!$user) {
-                do {
-                    $userName = Str::slug(
-                        $firstName . $lastName,
-                        ''
-                    ) . rand(1000, 9999);
-                } while (User::where('user_name', $userName)->exists());
-                $user = User::create([
-                    'social_id' => $socialUser->getId(),
-                    'provider' => $request->provider,
-                    'first_name'      => $firstName,
-                    'last_name'      => $lastName,
-                    'user_name'      => $userName,
-                    'email'     => $socialUser->getEmail(),
-                    'role'     => 'user',
-                    'avatar'    => $avatar,
-                    'password'  => bcrypt(Str::random(32)),
-                ]);
-            } else {
-                // Update Google info if already exists
-                $user->update([
-                    'social_id' => $socialUser->getId(),
-                    'first_name'      => $firstName,
-                    'last_name'      => $lastName,
-                    'avatar'    => $avatar,
-                ]);
+            // 2. Fallback check by email if available
+            if (!$user && !empty($email)) {
+                $user = User::where('email', $email)->first();
             }
 
-            $loginUser = User::find($user->id);
+            if (!$user) {
+                if (empty($email)) {
+                    return $this->errorResponse('Email is required for registration. Please provide email.', 422);
+                }
+
+                do {
+                    $userName = Str::slug($firstName . $lastName, '') . rand(1000, 9999);
+                } while (User::where('user_name', $userName)->exists());
+
+                $user = User::create([
+                    'social_id'         => $socialId,
+                    'provider'          => $request->provider,
+                    'first_name'        => $firstName,
+                    'last_name'         => $lastName,
+                    'user_name'         => $userName,
+                    'email'             => $email,
+                    'role'              => 'user',
+                    'avatar'            => $avatar,
+                    'password'          => Hash::make(Str::random(32)),
+                    'email_verified_at' => now(),
+                    'status'            => true,
+                    'email_visibility'  => true,
+                    'phone_visibility'  => true,
+                ]);
+            } else {
+                $updateData = [
+                    'social_id' => $socialId,
+                    'provider'  => $request->provider,
+                ];
+
+                if (empty($user->first_name) && !empty($firstName)) {
+                    $updateData['first_name'] = $firstName;
+                }
+                if (empty($user->last_name) && !empty($lastName)) {
+                    $updateData['last_name'] = $lastName;
+                }
+                if (empty($user->getRawOriginal('avatar')) && !empty($avatar)) {
+                    $updateData['avatar'] = $avatar;
+                }
+                if (empty($user->email_verified_at)) {
+                    $updateData['email_verified_at'] = now();
+                }
+
+                $user->update($updateData);
+            }
+
+            $loginUser = $user->fresh();
 
             if (!$loginUser->status) {
                 return $this->errorResponse('Your account has been suspended. Please contact support.', 403);
             }
 
-            $token = $loginUser->createToken('auth_token')->plainTextToken;
+            $token = $loginUser->createToken('api-token')->plainTextToken;
 
-            return $this->successResponse("Login Successfull", [
+            return $this->successResponse("Login successful", [
                 "token" => $token,
-                "user" => $loginUser,
+                "user"  => $loginUser,
             ], 200);
-        } catch (\Exception $e) {
+        } catch (\Throwable $e) {
+            Log::error('Social Login Error: ' . $e->getMessage(), [
+                'provider' => $request->provider,
+                'trace'    => $e->getTraceAsString(),
+            ]);
+
             return response()->json([
                 'success' => false,
-                'code' => 500,
-                'message' => config('app.debug')
-                    ? $e->getMessage()
-                    : 'Something went wrong.',
-                'errors' => [],
-            ], 500);
+                'code'    => 400,
+                'message' => $e->getMessage() ?: 'Social login authentication failed.',
+                'errors'  => [],
+            ], 400);
         }
     }
 }
