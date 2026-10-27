@@ -42,28 +42,114 @@ class SubscriptionApiController extends Controller
 
         $event = $request->input('event');
 
-        if (!$event) {
+        if (!$event || !is_array($event)) {
             return response()->json([
                 'message' => 'Invalid payload'
             ], 422);
         }
 
-        RevenuecatEvent::firstOrCreate(
-            [
-                'event_id' => $event['id']
-            ],
-            [
-                'type' => $event['type'],
-                'payload' => $request->all(),
-            ]
-        );
+        $eventId = $event['id'] ?? null;
+        $eventType = $event['type'] ?? 'UNKNOWN';
 
-        $user = User::find($event['app_user_id']);
+        if ($eventId) {
+            RevenuecatEvent::firstOrCreate(
+                [
+                    'event_id' => $eventId
+                ],
+                [
+                    'type' => $eventType,
+                    'payload' => $request->all(),
+                ]
+            );
+        }
+
+        // 1. Handle RevenueCat Dashboard test events gracefully
+        if ($eventType === 'TEST') {
+            return response()->json([
+                'success' => true,
+                'message' => 'Test event received successfully'
+            ], 200);
+        }
+
+        // 2. Handle TRANSFER event (e.g. User 114 -> User 116 on the same Apple device)
+        if ($eventType === 'TRANSFER') {
+            $transferredFrom = (array) ($event['transferred_from'] ?? []);
+            $transferredTo = (array) ($event['transferred_to'] ?? []);
+
+            $sourceSubscription = null;
+
+            // Deactivate subscription for previous user(s)
+            foreach ($transferredFrom as $fromId) {
+                $fromUser = User::find($fromId);
+                if ($fromUser) {
+                    $existingSub = Subscription::where('user_id', $fromUser->id)
+                        ->where('type', 'revenuecat')
+                        ->where('status', 'active')
+                        ->first();
+
+                    if ($existingSub) {
+                        $sourceSubscription = $existingSub;
+                        $existingSub->update([
+                            'status' => 'cancelled',
+                            'will_renew' => false,
+                        ]);
+                    }
+                    $fromUser->updateUsageLimits();
+                }
+            }
+
+            // Transfer / Grant active subscription to destination user(s)
+            foreach ($transferredTo as $toId) {
+                $toUser = User::find($toId);
+                if ($toUser) {
+                    Subscription::updateOrCreate(
+                        [
+                            'user_id' => $toUser->id,
+                        ],
+                        [
+                            'type' => 'revenuecat',
+                            'store' => $sourceSubscription?->store ?? $event['store'] ?? 'APP_STORE',
+                            'product_id' => $sourceSubscription?->product_id ?? ($event['product_id'] ?? null),
+                            'entitlement' => $sourceSubscription?->entitlement ?? ($event['entitlement_ids'][0] ?? 'Roots & Routes Pro'),
+                            'transaction_id' => $sourceSubscription?->transaction_id ?? ($event['transaction_id'] ?? null),
+                            'original_transaction_id' => $sourceSubscription?->original_transaction_id ?? ($event['original_transaction_id'] ?? null),
+                            'status' => 'active',
+                            'purchase_date' => $sourceSubscription?->purchase_date ?? now(),
+                            'expires_at' => $sourceSubscription?->expires_at ?? (isset($event['expiration_at_ms']) ? Carbon::createFromTimestampMs($event['expiration_at_ms']) : null),
+                            'will_renew' => $sourceSubscription?->will_renew ?? ($event['auto_renew_status'] ?? false),
+                        ]
+                    );
+
+                    $toUser->updateUsageLimits();
+                }
+            }
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Subscription transfer handled successfully'
+            ], 200);
+        }
+
+        // 3. Resolve app_user_id safely for standard events
+        $appUserId = $event['app_user_id'] 
+            ?? ($event['transferred_to'][0] ?? null) 
+            ?? ($event['original_app_user_id'] ?? null)
+            ?? ($event['aliases'][0] ?? null);
+
+        if (!$appUserId) {
+            Log::warning('RevenueCat Webhook: Missing app_user_id in payload', ['payload' => $request->all()]);
+            return response()->json([
+                'message' => 'Missing app_user_id'
+            ], 200);
+        }
+
+        $user = User::find($appUserId);
 
         if (!$user) {
+            Log::warning("RevenueCat Webhook: User not found for app_user_id: {$appUserId}", ['payload' => $request->all()]);
             return response()->json([
                 'message' => 'User not found'
-            ], 404);
+            ], 200);
         }
 
         // Always update the user's single subscription record.
